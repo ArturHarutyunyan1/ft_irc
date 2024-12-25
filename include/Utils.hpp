@@ -5,5 +5,5 @@
 #include <sstream>
 
 long long stringToInt(std::string &str);
-
+std::string welcomeMessage();
 #endif
