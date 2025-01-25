@@ -55,6 +55,7 @@
         "csignal": "cpp",
         "fstream": "cpp",
         "iomanip": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "__config": "cpp"
     }
 }

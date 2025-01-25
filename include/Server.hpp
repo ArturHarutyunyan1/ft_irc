@@ -3,6 +3,7 @@
 
 # include "Client.hpp"
 # include "Utils.hpp"
+# include "Requests.hpp"
 # include <vector>
 # include <iostream>
 # include <stdio.h>

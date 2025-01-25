@@ -29,20 +29,21 @@ void Server::newClient(int fd)
     {
         bool slotFound = false;
         for (int i = 1; i < MAX_CONNECTIONS; i++) {
-            if (this->_client_fds[i].fd == -1) {  // Find an empty slot
+            if (this->_client_fds[i].fd == -1)
+            {
                 this->_client_fds[i].fd = newFD;
                 this->_client_fds[i].events = POLLIN;
                 std::cout << "New client connected ✨" << std::endl;
                 std::string welcome = welcomeMessage();
-                if (send(newFD, welcome.c_str(), welcome.size(), 0) == -1) {
+                if (send(newFD, welcome.c_str(), welcome.size(), 0) == -1)
                     perror("Send error");
-                }
                 slotFound = true;
                 break;
             }
         }
 
-        if (!slotFound) {
+        if (!slotFound)
+        {
             std::cerr << "No available slots for new client" << std::endl;
             close(newFD);
         }
@@ -56,8 +57,8 @@ void Server::handleRequest(int i)
 
     bytes = recv(this->_client_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
     buffer[bytes] = '\0';
-    for (size_t j = 0; j < MAX_CONNECTIONS; j++)
-        send(this->_client_fds[j].fd, buffer, sizeof(buffer), 0);
+    Requests req(buffer, this->_client_fds, i);
+    req.handleRequest();
 }
 
 void Server::start()

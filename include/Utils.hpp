@@ -6,4 +6,7 @@
 
 long long stringToInt(std::string &str);
 std::string welcomeMessage();
+void setColor(int code);
+void resetColor();
+std::string helpMessage();
 #endif
