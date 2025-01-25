@@ -35,3 +35,4 @@ std::string helpMessage()
                       "\033[38;5;214m         Use USER command to register your username and full name. e.g: USER name * * :EXAMPLE\033[0m\n";
     return (msg);
 }
+

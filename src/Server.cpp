@@ -57,7 +57,7 @@ void Server::handleRequest(int i)
 
     bytes = recv(this->_client_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
     buffer[bytes] = '\0';
-    Requests req(buffer, this->_client_fds, i);
+    Requests req(buffer, this->_client_fds, i, getPassword(), false);
     req.handleRequest();
 }
 
