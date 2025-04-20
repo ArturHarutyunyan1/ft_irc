@@ -1,5 +1,7 @@
 #include "../include/Requests.hpp"
 
+#include <cstring>
+
 Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet) : _password(_password), _message(msg), _fd(fd), _fds(fds), _isSet(isSet)
 {
 }

@@ -20,7 +20,7 @@ std::string Server::getPassword() const
 
 void Server::newClient(int fd)
 {
-    int newFD = accept(fd, nullptr, nullptr);
+    int newFD = accept(fd, NULL, NULL);
     if (newFD == -1)
     {
         perror("Accept error");
