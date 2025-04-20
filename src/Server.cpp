@@ -56,6 +56,17 @@ void Server::handleRequest(int i)
     size_t bytes;
 
     bytes = recv(this->_client_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
+    if (bytes <= 0) {
+        if (bytes == 0) {
+            std::cout << "Client disconnected 🚪" << std::endl;
+        } else {
+            std::cerr << "Something went wrong" << std::endl;
+        }
+        close(this->_client_fds[i].fd);
+        this->_client_fds[i].fd = -1;
+        this->_client_fds[i].events = 0;
+        return;
+    }
     buffer[bytes] = '\0';
     Requests req(buffer, this->_client_fds, i, getPassword(), false);
     req.handleRequest();
