@@ -36,3 +36,11 @@ std::string helpMessage()
     return (msg);
 }
 
+
+int string_to_number(std::string input) {
+    std::stringstream ss(input);
+
+    int n;
+    ss >> n;
+    return (n);
+}
