@@ -9,6 +9,7 @@
 # include <stdio.h>
 # include <string>
 # include <fcntl.h>
+# include <map>
 # include <stdlib.h>
 # include <ctime>
 # include <errno.h>
@@ -30,6 +31,9 @@ class Server
         int _port;
         std::string _password;
         struct pollfd   *_client_fds;
+        // Map of channels
+        // Map of users and their fds
+        std::map<std::string, int> _users;
     public:
         Server(int port, std::string password);
         ~Server();
