@@ -6,33 +6,22 @@
 
 # include "Router.hpp"
 # include "Channel.hpp"
+# include "ServerException.hpp"
 
 class Server {
 public:
-	class ServerException : public std::exception {
-	public:
-		ServerException(void) throw(std::bad_alloc);
-		ServerException(ServerException const& other) throw(std::bad_alloc);
-		~ServerException(void) throw();
-
-		ServerException&	operator=(ServerException const& other) throw(std::bad_alloc);
-
-		char const*	what(void) const throw();
-	private:
-		std::string	message;
-	};
-
-	Server(void) throw();
-	Server(unsigned short port, std::string const& password) throw();
+	Server(void) throw(ServerException);
+	Server(unsigned short port, std::string const& password) throw(ServerException);
 	~Server(void) throw();
 
+	void	run(void) throw(std::bad_alloc, ServerException);
 private:
 	std::map<std::string, Channel>	channels;
 	Router							router;
 
-	Server(Server const& other) throw(std::bad_alloc);
+	Server(Server const& other) throw(std::bad_alloc, ServerException);
 
-	Server&	operator=(Server const& other) throw(std::bad_alloc);
+	Server&	operator=(Server const& other) throw(std::bad_alloc, ServerException);
 };
 
 #endif
