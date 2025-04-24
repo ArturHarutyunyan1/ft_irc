@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet) : _password(_password), _message(msg), _fd(fd), _fds(fds), _isSet(isSet)
+Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet, Server *_server) : _password(_password), _message(msg), _fd(fd), _fds(fds), _isSet(isSet), _server(_server)
 {
 }
 
@@ -31,6 +31,8 @@ void Requests::handleRequest()
         response = helpMessage();
     } else if (command == "PASS") {
         response = PASS(args);
+    } else if (command == "NICK") {
+        response = NICK(args);
     } else if (command == "KICK") {
         std::istringstream iss(args);
         std::string channel, user, extra;
@@ -75,7 +77,7 @@ void Requests::handleRequest()
             if (target.empty() || text.empty())
                 response = "ERROR\nUsage - PRIVMSG <target> :<message>\n";
             else
-                response = "PRIVMSG for target=" + target + " with message=" + text + "\n";
+                PRIVMSG(target, text);
         }
     } else if (command == "JOIN") {
         std::istringstream iss(args);
@@ -102,4 +104,18 @@ std::string Requests::PASS(std::string msg)
     }
     else
         return ("Invalid password!\n");
+}
+
+std::string Requests::NICK(const std::string &nickname) {
+    this->_server->addUser(nickname, this->_fd);
+    return ("Nickname was set to " + nickname);
+}
+
+void Requests::PRIVMSG(const std::string &receiver, const std::string &message) const {
+    // Send message to specific user
+    int user = this->_server->getUser(receiver);
+    if (user != -1) {
+        std::string msg = this->_server->getNick(this->_fd) + " says: " + message + "\n";
+        send(user, msg.c_str(), msg.size(), 0);
+    }
 }
