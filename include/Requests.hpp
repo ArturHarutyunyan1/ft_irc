@@ -1,6 +1,9 @@
 #ifndef REQUESTS_HPP
 #define REQUESTS_HPP
 
+#include <iostream>
+#include <sstream>
+#include <string>
 #include "Client.hpp"
 #include "Server.hpp"
 #include "Utils.hpp"
