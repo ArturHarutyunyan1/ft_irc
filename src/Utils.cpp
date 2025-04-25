@@ -1,4 +1,5 @@
 #include "../include/Utils.hpp"
+#include <sstream>
 
 void setColor(int code)
 {
@@ -43,4 +44,32 @@ int string_to_number(std::string input) {
     int n;
     ss >> n;
     return (n);
+}
+
+std::string escapeJson(std::string input)
+{
+    std::string result;
+
+    for (size_t i = 0; i < input.length(); i++)
+    {
+        char c = input[i];
+        if (c == '\"')
+            result += "\\\"";
+        else if (c == '\\')
+            result += "\\\\";
+        else if (c == '\n')
+            result += "\\n";
+        else
+            result += c;
+    }
+    return result;
+}
+
+std::string intToStr(int num)
+{
+    std::ostringstream os;
+
+    os << num;
+
+    return os.str();
 }

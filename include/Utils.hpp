@@ -11,4 +11,7 @@ void resetColor();
 std::string helpMessage();
 std::string passCommand(std::string msg, std::string password);
 int string_to_number(std::string input);
+std::string intToStr(int num);
+std::string escapeJson(std::string input);
+
 #endif

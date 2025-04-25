@@ -126,3 +126,96 @@ void Server::start()
         }
     }
 }   
+
+void Server::getResponseFromBot(std::string msg)
+{
+    int port = 443;
+    std::string host = "api.groq.com";
+    std::string apiKey = "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";
+    std::string endpoint = "/openai/v1/chat/completions";
+    std::string contentType = "Content-Type: application/json";
+    std::string bearer = "Authorization: Bearer " + apiKey;
+    std::string connection = "Connection: close";
+
+    std::string escapedMsg = escapeJson(msg);
+    std::string body =
+        "{\n"
+        "\"model\": \"meta-llama/llama-4-scout-17b-16e-instruct\",\n"
+        "\"messages\": [{\"role\": \"user\", \"content\": \"" + escapedMsg + "\"}]\n"
+        "}";
+
+    std::string message =
+        "POST " + endpoint + " HTTP/1.1\r\n"
+        "Host: " + host + "\r\n"
+        + contentType + "\r\n"
+        + bearer + "\r\n"
+        + connection + "\r\n"
+        "Content-Length: " + intToStr(body.length()) + "\r\n"
+        "\r\n"
+        + body;
+
+    SSL_load_error_strings();
+    SSL_library_init();
+    SSL_CTX *ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+    if (!ssl_ctx) perror("SSL_CTX_new");
+
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) perror("socket");
+
+    struct hostent *server = gethostbyname(host.c_str());
+    if (server == NULL) perror("gethostbyname");
+
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(port);
+    memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        perror("connect");
+
+    SSL *conn = SSL_new(ssl_ctx);
+    if (!conn) perror("SSL_new");
+
+    SSL_set_tlsext_host_name(conn, host.c_str());
+    SSL_set_fd(conn, sockfd);
+
+    int err = SSL_connect(conn);
+    if (err != 1)
+    {
+        ERR_print_errors_fp(stderr);
+        perror("SSL_connect");
+    }
+
+    int bytes = SSL_write(conn, message.c_str(), message.length());
+    if (bytes <= 0) perror("SSL_write");
+
+    char response[8192];
+    memset(response, 0, sizeof(response));
+    int total = sizeof(response) - 1;
+    int received = 0;
+    
+    while (received < total)
+    {
+        bytes = SSL_read(conn, response + received, total);
+        if (bytes <= 0) break;
+        received += bytes;
+    }
+
+    std::string json(response);
+    int posContent = json.find("\"content\"");
+    int posLogprobs = json.find("logprobs");
+
+    if (!(posContent == std::string::npos || posLogprobs == std::string::npos))
+    {
+        std::string extracted = json.substr(posContent + 11, posLogprobs - posContent - 14);
+        std::cout << extracted << std::endl;
+    }
+
+    SSL_shutdown(conn);
+    SSL_free(conn);
+    SSL_CTX_free(ssl_ctx);
+    close(sockfd);
+
+    return ;
+}
