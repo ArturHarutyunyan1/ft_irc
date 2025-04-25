@@ -40,7 +40,7 @@ void Requests::handleRequest()
         if (!channel.empty() && !user.empty() && extra.empty())
             response = "KICK command parsed for channel=" + channel + " and user=" + user + "\n";
         else
-            response = "Error\nUsage - KICK <channel> <nick>\n";
+            response = "ERROR\nUsage - KICK <channel> <nick>\n";
     } else if (command == "TOPIC") {
         std::istringstream iss(args);
         std::string channel, topic, extra;
@@ -49,7 +49,7 @@ void Requests::handleRequest()
         if (!channel.empty() && !topic.empty() && extra.empty())
             response = "TOPIC command parsed for chanel=" + channel + " and topic=" + topic + "\n";
         else
-            response = "Error\nUsage - TOPIC <channel> [<topic>]\n";
+            response = "ERROR\nUsage - TOPIC <channel> [<topic>]\n";
     } else if (command == "INVITE") {
         std::istringstream iss(args);
         std::string channel, user, extra;
@@ -58,9 +58,20 @@ void Requests::handleRequest()
         if (!channel.empty() && !user.empty() && extra.empty())
             response = "INVITE command parsed for chanel=" + channel + " and user=" + user + "\n";
         else
-            response = "Error\nUsage - INVITE <nickname> <channel>\n";
+            response = "ERROR\nUsage - INVITE <nickname> <channel>\n";
     } else if (command == "MODE") {
-        // TODO
+        std::istringstream iss(message);
+        std::string target, flags, p;
+        std::vector<std::string> modeParams;
+
+        iss >> target >> flags;
+        while (iss >> p)
+            modeParams.push_back(p);
+        if (target.empty() || flags.empty() || !(flags[0] == '+' || flags[0] == '-'))
+            response = "ERROR\nUsage - MODE <target> {+|-}<modes> [<mode params>]\n";
+        else {
+            response = "MODE command parsed\n";
+        }
     } else if (command == "PRIVMSG") {
         std::string target, text;
 
