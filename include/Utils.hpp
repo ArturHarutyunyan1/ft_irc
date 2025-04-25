@@ -10,4 +10,5 @@ void setColor(int code);
 void resetColor();
 std::string helpMessage();
 std::string passCommand(std::string msg, std::string password);
+int stringToInt(const std::string &string);
 #endif

@@ -36,3 +36,10 @@ std::string helpMessage()
     return (msg);
 }
 
+int stringToInt(const std::string &string) {
+    std::stringstream ss(string);
+
+    int res;
+    ss >> res;
+    return (res);
+}

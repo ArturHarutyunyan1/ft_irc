@@ -93,6 +93,13 @@ int Server::getUser(const std::string &nickname) const {
     return (-1);
 }
 
+bool Server::joinChannel(const std::string &channel, const std::string &nickname) {
+    if (_channels.find(channel) == _channels.end()) {
+        // _channels[channel] = Channel(); Create channel
+    }
+    return _channels[channel].addClient(nickname);
+}
+
 void Server::start()
 {
     int serverSocket;

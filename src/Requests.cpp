@@ -87,7 +87,7 @@ void Requests::handleRequest()
         if (channel.empty() || (channel[0] != '#'))
             response = "ERROR\nUsage - JOIN <#channel>\n";
         else
-            response = "JOIN command parsed for channel=" + channel + "\n";
+            response = JOIN(channel);
     } else {
         response = "Unknown Command\n";
     }
@@ -118,4 +118,17 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
         std::string msg = this->_server->getNick(this->_fd) + " says: " + message + "\n";
         send(user, msg.c_str(), msg.size(), 0);
     }
+}
+
+std::string Requests::JOIN(const std::string &channel) {
+    std::string nickname = this->_server->getNick(this->_fd);
+
+    if (nickname.empty())
+        return ("JOIN failed: nickname not set\n");
+    bool success = this->_server->joinChannel(channel, nickname);
+
+    if (!success)
+        return ("JOIN failed: Client client could not be added to channel " + channel + "\n");
+    else
+        return (nickname + " joined channel " + channel + '\n');
 }

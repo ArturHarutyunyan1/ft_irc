@@ -28,6 +28,7 @@ class Requests
         void handleRequest();
         std::string PASS(std::string msg);
         std::string NICK(const std::string &nickname);
+        std::string JOIN(const std::string &channel);
         void PRIVMSG(const std::string &receiver, const std::string &message) const;
 };
 
