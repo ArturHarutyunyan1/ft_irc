@@ -34,7 +34,7 @@ class Server
         std::string _password;
         struct pollfd   *_client_fds;
         // Map of channels
-        std::map<std::string, Channel> _channels;
+        // std::map<std::string, Channel> _channels;
         // Map of users and their fds
         std::map<std::string, int> _users;
     public:
@@ -46,7 +46,7 @@ class Server
         int getPort() const;
         void addUser(const std::string &nickname, int fd);
         int getUser(const std::string &nickname) const;
-        bool joinChannel(const std::string &channel, const std::string &nickname);
+        // bool joinChannel(const std::string &channel, const std::string &nickname);
         std::string getPassword() const;
         std::string getNick(int fd) const;
 };

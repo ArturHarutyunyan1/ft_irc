@@ -61,16 +61,16 @@ void Requests::handleRequest()
             response = "ERROR\nUsage - INVITE <nickname> <channel>\n";
     } else if (command == "MODE") {
         std::istringstream iss(message);
-        std::string target, flags, p;
-        std::vector<std::string> modeParams;
+        std::string target, flag, extra;
 
-        iss >> target >> flags;
-        while (iss >> p)
-            modeParams.push_back(p);
-        if (target.empty() || flags.empty() || !(flags[0] == '+' || flags[0] == '-'))
-            response = "ERROR\nUsage - MODE <target> {+|-}<modes> [<mode params>]\n";
+        iss >> target >> flag >> extra;
+        if (target.empty() || flag.empty() || !extra.empty() ||
+            flag.length() != 2 ||
+            (flag[0] != '+' && flag[0] != '-') ||
+            (flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l'))
+                response = "ERROR\nUsage MODE <target> <flag>\n";
         else {
-            response = "MODE command parsed\n";
+            // HANDLE MODE COMMAND
         }
     } else if (command == "PRIVMSG") {
         std::string target, text;
@@ -98,12 +98,13 @@ void Requests::handleRequest()
         if (channel.empty() || (channel[0] != '#'))
             response = "ERROR\nUsage - JOIN <#channel>\n";
         else
-            response = JOIN(channel);
+            // response = JOIN(channel);
+            response = "JOIN\n";
     } else {
         response = "Unknown Command\n";
     }
-
-    send(this->_fds[this->_fd].fd, response.c_str(), response.size(), 0);
+    (void)this->_fds;
+    send(this->_fd, response.c_str(), response.size(), 0);
 }
 
 std::string Requests::PASS(std::string msg)
@@ -131,15 +132,15 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
     }
 }
 
-std::string Requests::JOIN(const std::string &channel) {
-    std::string nickname = this->_server->getNick(this->_fd);
+// std::string Requests::JOIN(const std::string &channel) {
+//     std::string nickname = this->_server->getNick(this->_fd);
 
-    if (nickname.empty())
-        return ("JOIN failed: nickname not set\n");
-    bool success = this->_server->joinChannel(channel, nickname);
+//     if (nickname.empty())
+//         return ("JOIN failed: nickname not set\n");
+//     bool success = this->_server->joinChannel(channel, nickname);
 
-    if (!success)
-        return ("JOIN failed: Client client could not be added to channel " + channel + "\n");
-    else
-        return (nickname + " joined channel " + channel + '\n');
-}
+//     if (!success)
+//         return ("JOIN failed: Client client could not be added to channel " + channel + "\n");
+//     else
+//         return (nickname + " joined channel " + channel + '\n');
+// }
