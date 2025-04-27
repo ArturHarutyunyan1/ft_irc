@@ -49,6 +49,7 @@ class Server
         // bool joinChannel(const std::string &channel, const std::string &nickname);
         std::string getPassword() const;
         std::string getNick(int fd) const;
+        void removeUser(const std::string &nickname);
 };
 
 #endif

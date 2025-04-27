@@ -73,7 +73,19 @@ void Server::handleRequest(int i)
 }
 
 void Server::addUser(const std::string &nickname, int fd) {
-    this->_users[nickname] = fd;
+    std::map<std::string, int>::iterator it = _users.find(nickname);
+
+    if (it != _users.end()) {
+        _users.erase(it);
+    }
+    _users[nickname] = fd;
+}
+
+void Server::removeUser(const std::string &nickname) {
+    std::map<std::string, int>::iterator it = _users.find(nickname);
+
+    if (it != _users.end())
+        _users.erase(it);
 }
 
 std::string Server::getNick(int fd) const {
