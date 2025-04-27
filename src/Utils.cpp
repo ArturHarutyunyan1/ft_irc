@@ -37,7 +37,6 @@ std::string helpMessage()
     return (msg);
 }
 
-
 int string_to_number(std::string input) {
     std::stringstream ss(input);
 
@@ -72,4 +71,13 @@ std::string intToStr(int num)
     os << num;
 
     return os.str();
+}
+
+int stringToInt(const std::string &string)
+{
+    std::stringstream ss(string);
+
+    int res;
+    ss >> res;
+    return (res);
 }

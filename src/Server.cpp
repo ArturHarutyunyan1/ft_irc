@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include <sys/poll.h>
 
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
@@ -93,12 +94,20 @@ int Server::getUser(const std::string &nickname) const {
     return (-1);
 }
 
+// bool Server::joinChannel(const std::string &channel, const std::string &nickname) {
+//     if (_channels.find(channel) == _channels.end()) {
+//         // _channels[channel] = Channel(); Create channel
+//     }
+//     return _channels[channel].addClient(nickname);
+// }
+
 void Server::start()
 {
     int serverSocket;
     int opt = 1;
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+
     if (serverSocket == -1) {
         perror("Socket creation failed");
         return;
@@ -142,13 +151,15 @@ void Server::start()
                 if (this->_client_fds[i].fd == serverSocket)
                     newClient(serverSocket);
                 else
+                {
                     handleRequest(i);
+                }
             }
         }
     }
-}   
+}
 
-void Server::getResponseFromBot(std::string msg)
+std::string Server::getResponseFromBot(std::string msg)
 {
     int port = 443;
     std::string host = "api.groq.com";
@@ -175,13 +186,12 @@ void Server::getResponseFromBot(std::string msg)
         "\r\n"
         + body;
 
+    int botSocket = socket(AF_INET, SOCK_STREAM, 0);
+
     SSL_load_error_strings();
     SSL_library_init();
     SSL_CTX *ssl_ctx = SSL_CTX_new(SSLv23_client_method());
     if (!ssl_ctx) perror("SSL_CTX_new");
-
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) perror("socket");
 
     struct hostent *server = gethostbyname(host.c_str());
     if (server == NULL) perror("gethostbyname");
@@ -192,14 +202,14 @@ void Server::getResponseFromBot(std::string msg)
     serv_addr.sin_port = htons(port);
     memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
 
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    if (connect(botSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         perror("connect");
 
     SSL *conn = SSL_new(ssl_ctx);
     if (!conn) perror("SSL_new");
 
     SSL_set_tlsext_host_name(conn, host.c_str());
-    SSL_set_fd(conn, sockfd);
+    SSL_set_fd(conn, botSocket);
 
     int err = SSL_connect(conn);
     if (err != 1)
@@ -215,28 +225,27 @@ void Server::getResponseFromBot(std::string msg)
     memset(response, 0, sizeof(response));
     int total = sizeof(response) - 1;
     int received = 0;
-    
-    while (received < total)
+
+    do
     {
         bytes = SSL_read(conn, response + received, total);
         if (bytes <= 0) break;
         received += bytes;
     }
+    while (received < total);
 
     std::string json(response);
     size_t posContent = json.find("\"content\"");
     size_t posLogprobs = json.find("logprobs");
 
+    std::string extracted;
+
     if (!(posContent == std::string::npos || posLogprobs == std::string::npos))
-    {
-        std::string extracted = json.substr(posContent + 11, posLogprobs - posContent - 14);
-        std::cout << extracted << std::endl;
-    }
+        extracted = json.substr(posContent + 11, posLogprobs - posContent - 14);
 
     SSL_shutdown(conn);
     SSL_free(conn);
     SSL_CTX_free(ssl_ctx);
-    close(sockfd);
 
-    return ;
+    return extracted;
 }

@@ -2,7 +2,6 @@
 #define UTILS_HPP
 
 #include <iostream>
-#include <sstream>
 
 // long long stringToInt(std::string &str);
 std::string welcomeMessage();
@@ -14,4 +13,5 @@ int string_to_number(std::string input);
 std::string intToStr(int num);
 std::string escapeJson(std::string input);
 
+int stringToInt(const std::string &string);
 #endif

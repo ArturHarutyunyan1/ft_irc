@@ -40,7 +40,7 @@ void Requests::handleRequest()
         if (!channel.empty() && !user.empty() && extra.empty())
             response = "KICK command parsed for channel=" + channel + " and user=" + user + "\n";
         else
-            response = "Error\nUsage - KICK <channel> <nick>\n";
+            response = "ERROR\nUsage - KICK <channel> <nick>\n";
     } else if (command == "TOPIC") {
         std::istringstream iss(args);
         std::string channel, topic, extra;
@@ -49,7 +49,7 @@ void Requests::handleRequest()
         if (!channel.empty() && !topic.empty() && extra.empty())
             response = "TOPIC command parsed for chanel=" + channel + " and topic=" + topic + "\n";
         else
-            response = "Error\nUsage - TOPIC <channel> [<topic>]\n";
+            response = "ERROR\nUsage - TOPIC <channel> [<topic>]\n";
     } else if (command == "INVITE") {
         std::istringstream iss(args);
         std::string channel, user, extra;
@@ -58,9 +58,20 @@ void Requests::handleRequest()
         if (!channel.empty() && !user.empty() && extra.empty())
             response = "INVITE command parsed for chanel=" + channel + " and user=" + user + "\n";
         else
-            response = "Error\nUsage - INVITE <nickname> <channel>\n";
+            response = "ERROR\nUsage - INVITE <nickname> <channel>\n";
     } else if (command == "MODE") {
-        // TODO
+        std::istringstream iss(message);
+        std::string target, flag, extra;
+
+        iss >> target >> flag >> extra;
+        if (target.empty() || flag.empty() || !extra.empty() ||
+            flag.length() != 2 ||
+            (flag[0] != '+' && flag[0] != '-') ||
+            (flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l'))
+                response = "ERROR\nUsage MODE <target> <flag>\n";
+        else {
+            // HANDLE MODE COMMAND
+        }
     } else if (command == "PRIVMSG") {
         std::string target, text;
 
@@ -87,12 +98,18 @@ void Requests::handleRequest()
         if (channel.empty() || (channel[0] != '#'))
             response = "ERROR\nUsage - JOIN <#channel>\n";
         else
-            response = "JOIN command parsed for channel=" + channel + "\n";
+            // response = JOIN(channel);
+            response = "JOIN\n";
     } else {
         response = "Unknown Command\n";
     }
+    (void)this->_fds;
+    send(this->_fd, response.c_str(), response.size(), 0);
+}
 
-    send(this->_fds[this->_fd].fd, response.c_str(), response.size(), 0);
+void Requests::handleBotRequest()
+{
+    
 }
 
 std::string Requests::PASS(std::string msg)
@@ -108,14 +125,35 @@ std::string Requests::PASS(std::string msg)
 
 std::string Requests::NICK(const std::string &nickname) {
     this->_server->addUser(nickname, this->_fd);
-    return ("Nickname was set to " + nickname);
+    return ("Nickname was set to " + nickname + "\n");
 }
 
+// Send message to specific user
 void Requests::PRIVMSG(const std::string &receiver, const std::string &message) const {
-    // Send message to specific user
+    if (receiver == "bot")
+    {
+        std::string response = this->_server->getResponseFromBot(message);
+        response = "bot: " + response + "\n";
+        send(this->_fd, response.c_str(), response.size(), 0);
+        return ;
+    }
     int user = this->_server->getUser(receiver);
+
     if (user != -1) {
         std::string msg = this->_server->getNick(this->_fd) + " says: " + message + "\n";
         send(user, msg.c_str(), msg.size(), 0);
     }
 }
+
+// std::string Requests::JOIN(const std::string &channel) {
+//     std::string nickname = this->_server->getNick(this->_fd);
+
+//     if (nickname.empty())
+//         return ("JOIN failed: nickname not set\n");
+//     bool success = this->_server->joinChannel(channel, nickname);
+
+//     if (!success)
+//         return ("JOIN failed: Client client could not be added to channel " + channel + "\n");
+//     else
+//         return (nickname + " joined channel " + channel + '\n');
+// }
