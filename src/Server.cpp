@@ -68,8 +68,29 @@ void Server::handleRequest(int i)
         return;
     }
     buffer[bytes] = '\0';
-    Requests req(buffer, this->_client_fds, i, getPassword(), false);
+    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), false, this);
     req.handleRequest();
+}
+
+void Server::addUser(const std::string &nickname, int fd) {
+    this->_users[nickname] = fd;
+}
+
+std::string Server::getNick(int fd) const {
+    for (std::map<std::string, int>::const_iterator it = _users.begin(); it != _users.end(); ++it) {
+        if (it->second == fd) {
+            return (it->first);
+        }
+    }
+    return ("NULL");
+}
+
+int Server::getUser(const std::string &nickname) const {
+    std::map<std::string, int>::const_iterator it = _users.find(nickname);
+
+    if (it != _users.end())
+        return (it->second);
+    return (-1);
 }
 
 void Server::start()
@@ -203,8 +224,8 @@ void Server::getResponseFromBot(std::string msg)
     }
 
     std::string json(response);
-    int posContent = json.find("\"content\"");
-    int posLogprobs = json.find("logprobs");
+    size_t posContent = json.find("\"content\"");
+    size_t posLogprobs = json.find("logprobs");
 
     if (!(posContent == std::string::npos || posLogprobs == std::string::npos))
     {

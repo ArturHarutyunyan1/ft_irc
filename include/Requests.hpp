@@ -19,13 +19,16 @@ class Requests
         int _fd;
         struct pollfd *_fds;
         bool _isSet;
+        Server *_server;
     public:
-        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet);
+        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet, Server *_server);
         // Requests(const Requests &copy);
         // Requests &operator=(const Requests &copy);
         // ~Requests();
         void handleRequest();
         std::string PASS(std::string msg);
+        std::string NICK(const std::string &nickname);
+        void PRIVMSG(const std::string &receiver, const std::string &message) const;
 };
 
 #endif

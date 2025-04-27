@@ -44,9 +44,12 @@ class Server
         void newClient(int fd);
         void handleRequest(int i);
         int getPort() const;
+        void addUser(const std::string &nickname, int fd);
+        int getUser(const std::string &nickname) const;
         std::string getPassword() const;
 
         static void getResponseFromBot(std::string msg);
+        std::string getNick(int fd) const;
 };
 
 #endif
