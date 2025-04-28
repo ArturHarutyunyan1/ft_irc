@@ -1,6 +1,6 @@
 NAME = ircserv
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98
-LDFLAGS = -lcrypto -lssl
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -I$(HOME)/openssl/include
+LDFLAGS = -L$(HOME)/openssl/lib -lssl -lcrypto
 SRC = $(wildcard ./src/*.cpp)
 INC = $(wildcard ./include/*.hpp)
 OBJ = ${SRC:.cpp=.o}
@@ -10,7 +10,7 @@ RM = rm -f
 $(NAME): $(OBJ) $(INC)
 	$(CPP) $(CPPFLAGS) -o $(NAME) $(OBJ) $(LDFLAGS)
 %.o: %.cpp
-	$(CPP) $(CPPFLAGS) $(LDFLAGS) -c $< -o $@
+	$(CPP) $(CPPFLAGS) -c $< -o $@
 all: $(NAME)
 clean:
 	$(RM) $(OBJ)
