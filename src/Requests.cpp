@@ -124,6 +124,13 @@ std::string Requests::PASS(std::string msg)
 }
 
 std::string Requests::NICK(const std::string &nickname) {
+    int existingFd = this->_server->getUser(nickname);
+
+    if (existingFd != -1 && existingFd != this->_fd)
+        return ("Nickname is already taken!\n");
+    std::string previousNick = this->_server->getNick(this->_fd);
+    if (previousNick != "NULL")
+        this->_server->removeUser(previousNick);
     this->_server->addUser(nickname, this->_fd);
     return ("Nickname was set to " + nickname + "\n");
 }

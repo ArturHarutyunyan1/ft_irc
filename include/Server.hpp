@@ -54,6 +54,7 @@ class Server
 
         std::string getResponseFromBot(std::string msg);
         std::string getNick(int fd) const;
+        void removeUser(const std::string &nickname);
 };
 
 #endif
