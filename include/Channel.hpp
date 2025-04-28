@@ -5,18 +5,41 @@
 # include <list>
 
 # include "ServerException.hpp"
+# include "ChannelClientStatus.hpp"
 
 class Channel {
 public:
-	Channel(void) throw();
+	Channel(std::string const& creator) throw(std::bad_alloc);
 	~Channel(void) throw();
 
-	/*returns true if a client was added. If a channel is invite-only and the client is not invited
-		then false will be returned*/
+	/*
+	Returns:
+		CHANNEL_OK - a client was added
+		CHANNEL_NOT_ENOUGH_PLACES - a client exceeded a channel's client limit
+		CHANNEL_INVALID_KEY - a key given by a client doesn't match with a channel one
+		CHANNEL_CLIENT_NOT_INVITED - a channel has an invite-only flag and a client is not invited
+		CHANNEL_CLIENT_ALREADY_IN - a client already presents in a channel
+	*/
+	ChannelClientStatus	addClient(std::string const& nickname, std::string const& key) throw(std::bad_alloc);
+	/*
+	Legacy function
+	*/
 	bool	addClient(std::string const& nickname) throw(std::bad_alloc);
 
-	/*removes a client from channel if it exists*/
+	/*
+	Removes a client from channel if it exists taking all privileges 
+	*/
 	void	kickClient(std::string const& nickname) throw();
+
+	/*
+	Checks if a nickname is titled as an operator
+	*/
+	bool	isOperator(std::string const& nickname) const throw();
+
+	/*
+	Checks if a client with a given nickname presents in a channel
+	*/
+	bool	isClient(std::string const& nickname) const throw();
 
 	/*gets a channel's clients*/
 	std::list<std::string>::const_iterator	getClients(void) const throw();
@@ -43,7 +66,10 @@ public:
 	/*returns the topic settable by an operator only flag*/
 	bool	getTopicSettableByOp(void) const throw();
 
-	/*sets a channel's key*/
+	/*
+	Sets a channel's key.
+	If key string is empty then a channel's key is not set
+	*/
 	void	setKey(std::string const& key) throw(std::bad_alloc);
 
 	/*gets a channel's key*/
@@ -57,16 +83,18 @@ public:
 
 	/*Sets maximum client count. If a new limit is less than a current client count in a channel,
 		ServerException is throwing*/
-	void	setClientLimit(unsigned limit) throw(ServerException);
+	void	setClientLimit(int limit) throw(ServerException);
 private:
-	std::list<std::string>	clients;
+	std::list<std::string const&>	clients;
+	std::list<std::string>	invited;
 	std::list<std::string>	ops;
 	std::string				topic;
 	std::string				key;
-	unsigned				clientLimit;
+	int						clientLimit;
 	bool					isInviteOnly;
 	bool					isTopicSettableByOp;
 
+	Channel(void) throw();
 	Channel(Channel const& other) throw(std::bad_alloc);
 
 	Channel&	operator=(Channel const& other) throw(std::bad_alloc);
