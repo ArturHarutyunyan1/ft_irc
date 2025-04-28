@@ -132,3 +132,7 @@ void	Channel::removeOperator(std::string const& nickname) throw() {
 void	Channel::setClientLimit(int limit) throw() {
 	clientLimit = limit;
 }
+
+std::set<std::string>  Channel::getClients(void) const throw() {
+    return clients;
+}
