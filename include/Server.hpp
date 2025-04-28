@@ -34,7 +34,7 @@ class Server
         std::string _password;
         struct pollfd   *_client_fds;
         // Map of channels
-        // std::map<std::string, Channel> _channels;
+        std::map<std::string, Channel*> _channels;
         // Map of users and their fds
         std::map<std::string, int> _usernameToFd;
         std::map<int, std::string> _fdToUsername;
@@ -48,10 +48,11 @@ class Server
         void addUser(const std::string &nickname, int fd);
         void addFd(int fd, const std::string &username);
         int getUser(const std::string &nickname) const;
-        // bool joinChannel(const std::string &channel, const std::string &nickname);
         std::string getPassword() const;
         std::string getNick(int fd) const;
         void removeUser(const std::string &nickname, int fd);
+        Channel *getChannel(const std::string &channelName);
+        void addChannel(const std::string &channelName, Channel *channel);
 };
 
 #endif

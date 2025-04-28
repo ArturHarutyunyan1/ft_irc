@@ -108,8 +108,7 @@ void Requests::handleRequest()
         if (channel.empty() || (channel[0] != '#'))
             response = "ERROR\nUsage - JOIN <#channel>\n";
         else
-            // response = JOIN(channel);
-            response = "JOIN\n";
+            response = JOIN(channel, key);
     } else {
         response = "Unknown Command\n";
     }
@@ -139,6 +138,7 @@ std::string Requests::NICK(const std::string &nickname) {
     if (previousNick != "NULL")
         this->_server->removeUser(previousNick, this->_fd);
     this->_server->addUser(nickname, this->_fd);
+    this->_server->addFd(this->_fd, nickname);
     return ("Nickname was set to " + nickname + "\n");
 }
 
@@ -151,15 +151,27 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
     }
 }
 
-// std::string Requests::JOIN(const std::string &channel) {
-//     std::string nickname = this->_server->getNick(this->_fd);
+std::string Requests::JOIN(const std::string &channelName, const std::string &key) {
+    Channel *channel = _server->getChannel(channelName);
+    std::string nickname = _server->getNick(this->_fd);
 
-//     if (nickname.empty())
-//         return ("JOIN failed: nickname not set\n");
-//     bool success = this->_server->joinChannel(channel, nickname);
+    if (nickname == "NULL")
+        return ("ERROR\nYou need to set nickname before joining channels\n");
+    if (!channel) {
+        Channel *newChannel = new Channel(nickname);
+        _server->addChannel(channelName, newChannel);
+        return ("Channel " + channelName + " was created\n");
+    }
+    ChannelClientStatus status = channel->addClient(nickname, key);
 
-//     if (!success)
-//         return ("JOIN failed: Client client could not be added to channel " + channel + "\n");
-//     else
-//         return (nickname + " joined channel " + channel + '\n');
-// }
+    if (status == CHANNEL_CLIENT_ALREADY_IN)
+        return "ERROR: You are already in the channel\n";
+    else if (status == CHANNEL_CLIENT_NOT_INVITED)
+        return "ERROR: Channel is invite-only\n";
+    else if (status == CHANNEL_NOT_ENOUGH_PLACES)
+        return "ERROR: Channel is full\n";
+    else if (status == CHANNEL_INVALID_KEY)
+        return "ERROR: Invalid channel key\n";
+    else
+        return "You have joined channel " + channelName + "\n";
+}

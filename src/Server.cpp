@@ -117,14 +117,17 @@ int Server::getUser(const std::string &nickname) const {
     return (-1);
 }
 
+Channel *Server::getChannel(const std::string &channelName) {
+    std::map<std::string, Channel*>::iterator it = _channels.find(channelName);
 
+    if (it != _channels.end())
+        return (it->second);
+    return (NULL);
+}
 
-// bool Server::joinChannel(const std::string &channel, const std::string &nickname) {
-//     if (_channels.find(channel) == _channels.end()) {
-//         // _channels[channel] = Channel(); Create channel
-//     }
-//     return _channels[channel].addClient(nickname);
-// }
+void Server::addChannel(const std::string &channelName, Channel *channel) {
+    _channels[channelName] = channel;
+}
 
 void Server::start()
 {
