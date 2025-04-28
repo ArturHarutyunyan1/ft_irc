@@ -31,6 +31,8 @@ class Requests
         std::string JOIN(const std::string &channel, const std::string &key);
         void PRIVMSG(const std::string &receiver, const std::string &message) const;
         void KICK(const std::string &channel, const std::string &nickname);
+        void TOPIC(const std::string &channel, const std::string &topic);
+        void sendToEveryone(Channel *channel, const std::string &message) const;
 };
 
 #endif

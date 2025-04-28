@@ -53,11 +53,13 @@ void Requests::handleRequest()
             response = "ERROR\nUsage - KICK <channel> <nick>\n";
     } else if (command == "TOPIC") {
         std::istringstream iss(args);
-        std::string channel, topic, extra;
+        std::string channel, topic;
 
-        iss >> channel >> topic >> extra;
-        if (!channel.empty() && !topic.empty() && extra.empty())
-            response = "TOPIC command parsed for chanel=" + channel + " and topic=" + topic + "\n";
+        iss >> channel;
+        std::getline(iss >> std::ws, topic);
+        
+        if (!channel.empty() && !topic.empty())
+            TOPIC(channel, topic);
         else
             response = "ERROR\nUsage - TOPIC <channel> [<topic>]\n";
     } else if (command == "INVITE") {
@@ -178,8 +180,6 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
     }
 }
 
-
-
 std::string Requests::JOIN(const std::string &channelName, const std::string &key) {
     Channel *channel = _server->getChannel(channelName);
     std::string nickname = _server->getNick(this->_fd);
@@ -192,6 +192,9 @@ std::string Requests::JOIN(const std::string &channelName, const std::string &ke
         return ("Channel " + channelName + " was created\n");
     }
     ChannelClientStatus status = channel->addClient(nickname, key);
+
+    std::string topic = "TOPIC - " + channel->getTopic() + "\n";
+    send(this->_fd, topic.c_str(), topic.size(), 0);
 
     if (status == CHANNEL_CLIENT_ALREADY_IN)
         return "ERROR: You are already in the channel\n";
@@ -211,7 +214,7 @@ void Requests::KICK(const std::string &channelName, const std::string &nickname)
     if (channel) {
         if (channel->isOperator(_server->getNick(this->_fd))) {
             if (_server->getNick(this->_fd) != nickname) {
-                PRIVMSG(channelName, nickname + " was kicked from server " + channelName + "\n");
+                sendToEveryone(channel, _server->getNick(this->_fd) + " kicked " + nickname + " from channel " + channelName + "\n");
                 channel->kickClient(nickname);
             } else {
                 PRIVMSG(_server->getNick(this->_fd), "You can't kick yourself\n");
@@ -220,4 +223,32 @@ void Requests::KICK(const std::string &channelName, const std::string &nickname)
             PRIVMSG(_server->getNick(this->_fd), "You are not operator\n");
     } else
         PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
+}
+
+void Requests::TOPIC(const std::string &channelName, const std::string &topic) {
+    Channel *channel = _server->getChannel(channelName);
+
+    if (channel) {
+        if (channel->getTopicSettableByOp()) {
+            if (channel->isOperator(_server->getNick(this->_fd))) {
+                channel->setTopic(topic);
+                sendToEveryone(channel, "Channel topic was set to " + topic + "\n");
+            } else
+                PRIVMSG(_server->getNick(this->_fd), "Only operator can set topic\n");
+        } else {
+            channel->setTopic(topic);
+            sendToEveryone(channel, "Channel topic was set to " + topic + "\n");
+        }
+    } else
+        PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
+}
+
+void Requests::sendToEveryone(Channel *channel, const std::string &message) const {
+    std::set<std::string> clients = channel->getClients();
+
+    for (std::set<std::string>::iterator it = clients.begin(); it != clients.end(); ++it)
+    {
+        int clientFD = _server->getUser(*it);
+        send(clientFD, message.c_str(), message.size(), 0);
+    }
 }
