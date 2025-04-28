@@ -30,6 +30,7 @@ class Requests
         std::string NICK(const std::string &nickname);
         std::string JOIN(const std::string &channel, const std::string &key);
         void PRIVMSG(const std::string &receiver, const std::string &message) const;
+        void KICK(const std::string &channel, const std::string &nickname);
 };
 
 #endif

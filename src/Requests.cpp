@@ -48,7 +48,7 @@ void Requests::handleRequest()
         std::string channel, user, extra;
         iss >> channel >> user >> extra;
         if (!channel.empty() && !user.empty() && extra.empty())
-            response = "KICK command parsed for channel=" + channel + " and user=" + user + "\n";
+            KICK(channel, user);
         else
             response = "ERROR\nUsage - KICK <channel> <nick>\n";
     } else if (command == "TOPIC") {
@@ -203,4 +203,21 @@ std::string Requests::JOIN(const std::string &channelName, const std::string &ke
         return "ERROR: Invalid channel key\n";
     else
         return "You have joined channel " + channelName + "\n";
+}
+
+void Requests::KICK(const std::string &channelName, const std::string &nickname) {
+    Channel *channel = _server->getChannel(channelName);
+
+    if (channel) {
+        if (channel->isOperator(_server->getNick(this->_fd))) {
+            if (_server->getNick(this->_fd) != nickname) {
+                PRIVMSG(channelName, nickname + " was kicked from server " + channelName + "\n");
+                channel->kickClient(nickname);
+            } else {
+                PRIVMSG(_server->getNick(this->_fd), "You can't kick yourself\n");
+            }
+        } else
+            PRIVMSG(_server->getNick(this->_fd), "You are not operator\n");
+    } else
+        PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
 }
