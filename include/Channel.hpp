@@ -2,7 +2,7 @@
 # define CHANNEL_HPP
 
 # include <string>
-# include <list>
+# include <set>
 
 # include "ServerException.hpp"
 # include "ChannelClientStatus.hpp"
@@ -40,14 +40,14 @@ public:
 	bool	isClient(std::string const& nickname) const throw();
 
 	/*gets a channel's clients*/
-	std::list<std::string>::const_iterator	getClients(void) const throw();
+	std::set<std::string>::const_iterator	getClients(void) const throw();
 
 	/*adds a client to a channel's invitation list so the client will be added to the channel if the
 		channel has invite-only mode*/
 	void	inviteClient(std::string const& nickname) throw(std::bad_alloc);
 
 	/*set a channel's welcome message*/
-	void	setTopic(std::string const& message) throw(std::bad_alloc);
+	void	setTopic(std::string const& topic) throw(std::bad_alloc);
 
 	/*gets a channel's welcome message*/
 	std::string const&	getTopic(void) const throw();
@@ -81,11 +81,11 @@ public:
 
 	/*Sets maximum client count. If a new limit is less than a current client count in a channel,
 		ServerException is throwing*/
-	void	setClientLimit(int limit) throw(ServerException);
+	void	setClientLimit(int limit) throw();
 private:
-	std::list<std::string>	clients;
-	std::list<std::string>	invited;
-	std::list<std::string>	ops;
+	std::set<std::string>	clients;
+	std::set<std::string>	invited;
+	std::set<std::string>	ops;
 	std::string				topic;
 	std::string				key;
 	int						clientLimit;

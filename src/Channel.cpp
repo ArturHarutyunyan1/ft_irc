@@ -6,8 +6,10 @@ Channel::Channel(void) throw() : clientLimit(-1), isInviteOnly(false), isTopicSe
 }
 
 Channel::Channel(std::string const& creator) throw(std::bad_alloc)
-: clients(1, creator), ops(1, creator), clientLimit(-1), isInviteOnly(false),
+: clientLimit(-1), isInviteOnly(false),
 	isTopicSettableByOp(true) {
+	clients.insert(creator);
+	ops.insert(creator);
 }
 
 Channel::~Channel(void) throw() {
@@ -33,15 +35,16 @@ Channel&	Channel::operator=(Channel const& other) throw(std::bad_alloc) {
 	return *this;
 }
 
-ChannelClientStatus	Channel::addClient(std::string const& nickname, std::string const& key) throw(std::bad_alloc) {
+ChannelClientStatus	Channel::addClient(std::string const& nickname, std::string const& key)
+throw(std::bad_alloc) {
 	ChannelClientStatus	status;
 
-	if (std::find(clients.begin(), clients.end(), nickname) != clients.end())
+	if (clients.find(nickname) != clients.end())
 		status = CHANNEL_CLIENT_ALREADY_IN;
 	else if (isInviteOnly) {
-		std::list<std::string>::iterator	invitation;
+		std::set<std::string>::iterator	invitation;
 
-		if ((invitation = std::find(invited.begin(), invited.end(), nickname)) == invited.end())
+		if ((invitation = invited.find(nickname)) == invited.end())
 			status = CHANNEL_CLIENT_NOT_INVITED;
 		else {
 			status = CHANNEL_OK;
@@ -57,20 +60,72 @@ ChannelClientStatus	Channel::addClient(std::string const& nickname, std::string 
 }
 
 void	Channel::kickClient(std::string const& nickname) throw() {
-	std::list<std::string>::iterator	clientToErase = std::find(clients.begin(), clients.end(),
-		nickname);
-	std::list<std::string>::iterator	operatorToErase = std::find(ops.begin(), ops.end(),
-		nickname);
-	if (clientToErase != clients.end())
-		clients.erase(clientToErase);
-	if (operatorToErase != ops.end())
-		ops.erase(operatorToErase);
+	clients.erase(nickname);
+	ops.erase(nickname);
+}
+
+void	Channel::changeClientNickname(std::string const& old, std::string const& newNick)
+throw(std::bad_alloc) {
+	if (clients.erase(old))
+		clients.insert(newNick);
+	if (invited.erase(old))
+		invited.insert(newNick);
+	if (ops.erase(old))
+		ops.insert(newNick);
 }
 
 bool	Channel::isOperator(std::string const& nickname) const throw() {
-	return std::find(ops.begin(), ops.end(), nickname) != ops.end();
+	return ops.find(nickname) != ops.end();
 }
 
 bool	Channel::isClient(std::string const& nickname) const throw() {
-	return std::find(clients.begin(), clients.end(), nickname) != clients.end();
+	return clients.find(nickname) != clients.end();
+}
+
+void	Channel::inviteClient(std::string const& nickname) throw(std::bad_alloc) {
+	invited.insert(nickname);
+}
+
+void	Channel::setTopic(std::string const& topic) throw(std::bad_alloc) {
+	this->topic = topic;
+}
+
+std::string const&	Channel::getTopic(void) const throw() {
+	return topic;
+}
+
+void	Channel::setInviteOnly(bool isInviteOnly) throw() {
+	this->isInviteOnly = isInviteOnly;
+}
+
+bool	Channel::getInviteOnly(void) const throw() {
+	return isInviteOnly;
+}
+
+void	Channel::setTopicSettableByOp(bool isTopicSettableByOp) throw() {
+	this->isTopicSettableByOp = isTopicSettableByOp;
+}
+
+bool	Channel::getTopicSettableByOp(void) const throw() {
+	return isTopicSettableByOp;
+}
+
+void	Channel::setKey(std::string const& key) throw(std::bad_alloc) {
+	this->key = key;
+}
+
+std::string const&	Channel::getKey(void) const throw() {
+	return key;
+}
+
+void	Channel::addOperator(std::string const& nickname) throw(std::bad_alloc) {
+	ops.insert(nickname);
+}
+
+void	Channel::removeOperator(std::string const& nickname) throw() {
+	ops.erase(nickname);
+}
+
+void	Channel::setClientLimit(int limit) throw() {
+	clientLimit = limit;
 }
