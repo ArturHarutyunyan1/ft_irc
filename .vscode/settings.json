@@ -1,4 +1,5 @@
 {
+    "C_Cpp.intelliSenseEngine": "default",
     "files.associations": {
         "algorithm": "cpp",
         "__bit_reference": "cpp",

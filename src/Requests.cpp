@@ -33,6 +33,16 @@ void Requests::handleRequest()
         response = PASS(args);
     } else if (command == "NICK") {
         response = NICK(args);
+    } else if (command == "USER") {
+        std::istringstream iss(args);
+        std::string username, value, asterix, realname, extra;
+
+        iss >> username >> value >> asterix >> realname >> extra;
+
+        if (username.empty() || value.empty() || value != "0" || asterix.empty() || asterix != "*" || realname.empty() || realname[0] != ':' || !extra.empty())
+            response = "ERROR\nUsage - USER <username> 0 * :<realname>\n";
+        else 
+            response = "Parsed USER command for username=" + username + " and realname=" + realname + "\n";
     } else if (command == "KICK") {
         std::istringstream iss(args);
         std::string channel, user, extra;
@@ -123,9 +133,11 @@ std::string Requests::NICK(const std::string &nickname) {
 
     if (existingFd != -1 && existingFd != this->_fd)
         return ("Nickname is already taken!\n");
+    if (nickname.length() > 9)
+        return ("Maximum 9 characters\n");
     std::string previousNick = this->_server->getNick(this->_fd);
     if (previousNick != "NULL")
-        this->_server->removeUser(previousNick);
+        this->_server->removeUser(previousNick, this->_fd);
     this->_server->addUser(nickname, this->_fd);
     return ("Nickname was set to " + nickname + "\n");
 }
