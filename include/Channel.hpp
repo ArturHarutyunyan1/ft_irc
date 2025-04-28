@@ -21,15 +21,13 @@ public:
 		CHANNEL_CLIENT_ALREADY_IN - a client already presents in a channel
 	*/
 	ChannelClientStatus	addClient(std::string const& nickname, std::string const& key) throw(std::bad_alloc);
-	/*
-	Legacy function
-	*/
-	bool	addClient(std::string const& nickname) throw(std::bad_alloc);
 
 	/*
 	Removes a client from channel if it exists taking all privileges 
 	*/
 	void	kickClient(std::string const& nickname) throw();
+
+	void	changeClientNickname(std::string const& old, std::string const& newNick) throw(std::bad_alloc);
 
 	/*
 	Checks if a nickname is titled as an operator
@@ -85,7 +83,7 @@ public:
 		ServerException is throwing*/
 	void	setClientLimit(int limit) throw(ServerException);
 private:
-	std::list<std::string const&>	clients;
+	std::list<std::string>	clients;
 	std::list<std::string>	invited;
 	std::list<std::string>	ops;
 	std::string				topic;
