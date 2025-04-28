@@ -26,7 +26,6 @@ class Requests
         // Requests &operator=(const Requests &copy);
         // ~Requests();
         void handleRequest();
-        void handleBotRequest();
         std::string PASS(std::string msg);
         std::string NICK(const std::string &nickname);
         std::string JOIN(const std::string &channel);

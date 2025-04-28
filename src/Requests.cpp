@@ -107,11 +107,6 @@ void Requests::handleRequest()
     send(this->_fd, response.c_str(), response.size(), 0);
 }
 
-void Requests::handleBotRequest()
-{
-    
-}
-
 std::string Requests::PASS(std::string msg)
 {
     if (msg == _password && !_isSet)
@@ -139,7 +134,7 @@ std::string Requests::NICK(const std::string &nickname) {
 void Requests::PRIVMSG(const std::string &receiver, const std::string &message) const {
     if (receiver == "bot")
     {
-        std::string response = this->_server->getResponseFromBot(message);
+        std::string response = this->_server->sendRequestToBot(message, this->_server->getBot().socketFd);
         response = "bot: " + response + "\n";
         send(this->_fd, response.c_str(), response.size(), 0);
         return ;
