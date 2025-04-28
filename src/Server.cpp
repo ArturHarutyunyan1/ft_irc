@@ -27,6 +27,7 @@ void Server::newClient(int fd)
     }
     else
     {
+        fcntl(newFD, F_SETFL, O_NONBLOCK);
         bool slotFound = false;
         for (int i = 1; i < MAX_CONNECTIONS; i++) {
             if (this->_client_fds[i].fd == -1)
@@ -52,7 +53,7 @@ void Server::newClient(int fd)
 
 void Server::handleRequest(int i)
 {
-    char buffer[1024] = {0};
+    char buffer[100000] = {0};
     size_t bytes;
 
     bytes = recv(this->_client_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
@@ -73,37 +74,50 @@ void Server::handleRequest(int i)
 }
 
 void Server::addUser(const std::string &nickname, int fd) {
-    std::map<std::string, int>::iterator it = _users.find(nickname);
+    std::map<std::string, int>::iterator it = _usernameToFd.find(nickname);
 
-    if (it != _users.end()) {
-        _users.erase(it);
+    if (it != _usernameToFd.end()) {
+        _usernameToFd.erase(it);
     }
-    _users[nickname] = fd;
+    _usernameToFd[nickname] = fd;
 }
 
-void Server::removeUser(const std::string &nickname) {
-    std::map<std::string, int>::iterator it = _users.find(nickname);
+void Server::addFd(int fd, const std::string &username) {
+    std::map<int, std::string>::iterator it = _fdToUsername.find(fd);
 
-    if (it != _users.end())
-        _users.erase(it);
+    if (it != _fdToUsername.end()) {
+        _fdToUsername.erase(it);
+    }
+    _fdToUsername[fd] = username;
+}
+
+void Server::removeUser(const std::string &nickname, int fd) {
+    std::map<std::string, int>::iterator usernameIterator = _usernameToFd.find(nickname);
+    std::map<int, std::string>::iterator fdIterator = _fdToUsername.find(fd);
+
+    if (usernameIterator != _usernameToFd.end())
+        _usernameToFd.erase(usernameIterator);
+    if (fdIterator != _fdToUsername.end())
+        _fdToUsername.erase(fdIterator);
 }
 
 std::string Server::getNick(int fd) const {
-    for (std::map<std::string, int>::const_iterator it = _users.begin(); it != _users.end(); ++it) {
-        if (it->second == fd) {
-            return (it->first);
-        }
-    }
+    std::map<int, std::string>::const_iterator it = _fdToUsername.find(fd);
+
+    if (it != _fdToUsername.end())
+        return (it->second);
     return ("NULL");
 }
 
 int Server::getUser(const std::string &nickname) const {
-    std::map<std::string, int>::const_iterator it = _users.find(nickname);
+    std::map<std::string, int>::const_iterator it = _usernameToFd.find(nickname);
 
-    if (it != _users.end())
+    if (it != _usernameToFd.end())
         return (it->second);
     return (-1);
 }
+
+
 
 // bool Server::joinChannel(const std::string &channel, const std::string &nickname) {
 //     if (_channels.find(channel) == _channels.end()) {

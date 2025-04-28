@@ -36,7 +36,8 @@ class Server
         // Map of channels
         // std::map<std::string, Channel> _channels;
         // Map of users and their fds
-        std::map<std::string, int> _users;
+        std::map<std::string, int> _usernameToFd;
+        std::map<int, std::string> _fdToUsername;
     public:
         Server(int port, std::string password);
         ~Server();
@@ -45,11 +46,12 @@ class Server
         void handleRequest(int i);
         int getPort() const;
         void addUser(const std::string &nickname, int fd);
+        void addFd(int fd, const std::string &username);
         int getUser(const std::string &nickname) const;
         // bool joinChannel(const std::string &channel, const std::string &nickname);
         std::string getPassword() const;
         std::string getNick(int fd) const;
-        void removeUser(const std::string &nickname);
+        void removeUser(const std::string &nickname, int fd);
 };
 
 #endif
