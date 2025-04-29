@@ -48,9 +48,10 @@ class Client
         bool isNickSet() const;
         bool isUserSet() const;
 
-
         Client(int fd, bool status);
         ~Client();
+        Client(const Client &other);
+        Client &operator=(const Client &other);
 };
 
 #endif

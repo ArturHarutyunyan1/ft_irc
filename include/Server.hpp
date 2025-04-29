@@ -45,6 +45,8 @@ class Server
     public:
         Server(int port, std::string password);
         ~Server();
+        Server(const Server &other);
+        Server &operator=(const Server &other);
         void start();
         void newClient(int fd);
         void handleRequest(int i);

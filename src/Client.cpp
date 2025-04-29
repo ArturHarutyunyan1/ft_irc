@@ -4,6 +4,28 @@ Client::Client(int fd, bool status) : _fd(fd), _authenticationStatus(status) {}
 
 Client::~Client() {}
 
+Client::Client(const Client &other)
+    : _fd(other._fd), _password(other._password), _nick(other._nick),
+      _username(other._username), _realname(other._realname),
+      _ip(other._ip), _authenticationStatus(other._authenticationStatus)
+{
+}
+
+Client &Client::operator=(const Client &other)
+{
+    if (this != &other)
+    {
+        _fd = other._fd;
+        _password = other._password;
+        _nick = other._nick;
+        _username = other._username;
+        _realname = other._realname;
+        _ip = other._ip;
+        _authenticationStatus = other._authenticationStatus;
+    }
+    return *this;
+}
+
 int Client::getFd() const {
     return (this->_fd);
 }

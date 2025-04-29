@@ -42,7 +42,7 @@ public:
 	bool	isClient(std::string const& nickname) const throw();
 
 	/*gets a channel's clients*/
-	std::set<std::string>  getClients(void) const throw();
+	const std::set<std::string> &getClients(void) const throw();
 
 	/*adds a client to a channel's invitation list so the client will be added to the channel if the
 		channel has invite-only mode*/

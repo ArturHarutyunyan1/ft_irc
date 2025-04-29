@@ -6,6 +6,51 @@ Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password,
     : _password(_password), _message(msg), _fd(fd), _fds(fds), _server(_server), _client(_client)
 {}
 
+Requests::Requests(const Requests &other)
+    : _password(other._password), _username(other._username),
+      _fd(other._fd), _fds(other._fds), _server(other._server),
+      _client(other._client)
+{
+    if (other._message != NULL)
+    {
+        _message = new char[strlen(other._message) + 1];
+        strcpy(_message, other._message);
+    }
+    else
+    {
+        _message = NULL;
+    }
+}
+
+Requests &Requests::operator=(const Requests &other)
+{
+    if (this != &other)
+    {
+        delete[] _message;
+        _password = other._password;
+        _username = other._username;
+        _fd = other._fd;
+        _fds = other._fds;
+        _server = other._server;
+        _client = other._client;
+        if (other._message != nullptr)
+        {
+            _message = new char[strlen(other._message) + 1];
+            strcpy(_message, other._message);
+        }
+        else
+        {
+            _message = nullptr;
+        }
+    }
+    return *this;
+}
+
+Requests::~Requests()
+{
+    delete[] _message;
+}
+
 void Requests::handleRequest()
 {
     std::string message(_message);
