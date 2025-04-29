@@ -35,7 +35,7 @@ class Server
         int _port;
         std::string _password;
         struct pollfd   *_client_fds;
-        Bot bot;
+        std::vector<Bot *> _botRequests;
         // Map of channels
         // std::map<std::string, Channel> _channels;
         // Map of users and their fds
@@ -49,7 +49,6 @@ class Server
         void handleRequest(int i);
         void handleRequestBot(int i);
         int getPort() const;
-        Bot &getBot();
         void addUser(const std::string &nickname, int fd);
         void addFd(int fd, const std::string &username);
         int getUser(const std::string &nickname) const;
@@ -57,10 +56,18 @@ class Server
         std::string getPassword() const;
 
         std::string getNick(int fd) const;
-        void removeUser(const std::string &nickname);
+        void removeUser(const std::string &nickname, int fd);
 
-        std::string sendRequestToBot(std::string msg, int botSocket);
-        std::string getResponseFromBot(std::string msg);
+        int findFreeFdSlot();
+
+        Bot* findBotBySocket(int socketFd);
+        void sendRequestToBot(std::string msg, int clientFd);
+        void cleanupBot(Bot* bot, int pollfdIndex);
+        
+        void botInit(Bot *bot, int idx);
+        void botHandshake(Bot *bot, int idx);
+        void botSending(Bot *bot, int idx);
+        void botReceiving(Bot *bot, int idx);
 };
 
 #endif
