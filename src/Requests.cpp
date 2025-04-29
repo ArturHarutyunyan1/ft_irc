@@ -146,9 +146,7 @@ std::string Requests::NICK(const std::string &nickname) {
 void Requests::PRIVMSG(const std::string &receiver, const std::string &message) const {
     if (receiver == "bot")
     {
-        std::string response = this->_server->sendRequestToBot(message, this->_server->getBot().socketFd);
-        response = "bot: " + response + "\n";
-        send(this->_fd, response.c_str(), response.size(), 0);
+        this->_server->sendRequestToBot(message, this->_fd);
         return ;
     }
     int user = this->_server->getUser(receiver);
