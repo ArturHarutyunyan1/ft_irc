@@ -1,59 +1,61 @@
 #include "../include/Client.hpp"
 
-Client::Client(int fd, std::string password) : _fd(fd), _password(password)
-{
-    this->_nickname = "";
-    this->_username = "";
-    this->_authenticated = false;
-}
+Client::Client(int fd, bool status) : _fd(fd), _authenticationStatus(status) {}
 
-int Client::getFd() const
-{
+Client::~Client() {}
+
+int Client::getFd() const {
     return (this->_fd);
 }
 
-bool Client::isAuthenticated() const
-{
-    return (this->_authenticated);
+std::string Client::getNick() const {
+    return (this->_nick);
 }
 
-void Client::authenticate(std::string password)
-{
-    if (password != _password)
-    {
-        send(_fd, "Authentication failed\n", 22, 0);
-        close (_fd);
-    }
-    else
-    {
-        _authenticated = true;
-        send(_fd, "Successfully authenticated\n", 27, 0);
-    }
+std::string Client::getUsername() const {
+    return (this->_username);
 }
 
-void Client::setNickname(std::string nick)
-{
-    this->_nickname = nick;
+std::string Client::getRealname() const {
+    return (this->_realname);
 }
 
-void Client::setUsername(std::string user)
-{
-    this->_username = user;
+bool Client::isAuthenticated() const {
+    return (isUserSet() && isNickSet() && isPasswordSet());
 }
 
-void Client::handleCommunication(int fd)
-{
-    while (true)
-    {
-        std::string response;
-        std::cout << "Enter message: ";
-        std::getline(std::cin, response);
-        if (response == "quit")
-        {
-            std::cout << "Closing communication." << std::endl;
-            break;
-        }
-        send(fd, response.c_str(), response.size(), 0);
-    }
+void Client::setNick(const std::string &nick) {
+    this->_nick = nick;
 }
 
+void Client::setUsername(const std::string &username, const std::string &realname) {
+    this->_username = username;
+    this->_realname = realname;
+}
+
+
+void Client::setAuthStatus(bool status) {
+    this->_authenticationStatus = status;
+}
+
+void Client::setPassword(const std::string &password) {
+    this->_password = password;
+}
+
+bool Client::isPasswordSet() const {
+    if (!this->_password.empty())
+        return (true);
+    return (false);
+}
+
+bool Client::isNickSet() const {
+    if (!this->_nick.empty())
+        return (true);
+    return (false);
+}
+
+bool Client::isUserSet() const {
+    if (!this->_username.empty())
+        return (true);
+    return (false);
+}

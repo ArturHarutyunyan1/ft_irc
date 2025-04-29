@@ -39,6 +39,8 @@ void Server::newClient(int fd)
                 if (send(newFD, welcome.c_str(), welcome.size(), 0) == -1)
                     perror("Send error");
                 slotFound = true;
+                Client *newClient = new Client(newFD, false);
+                _clients[newFD] = newClient;
                 break;
             }
         }
@@ -69,7 +71,8 @@ void Server::handleRequest(int i)
         return;
     }
     buffer[bytes] = '\0';
-    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), false, this);
+    Client *client = _clients[this->_client_fds[i].fd];
+    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), false, this, client);
     req.handleRequest();
 }
 

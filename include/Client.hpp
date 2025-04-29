@@ -25,18 +25,28 @@ class Client
     private:
         int _fd;
         std::string _password;
-        std::string _nickname;
+        std::string _nick;
         std::string _username;
-        bool _authenticated;
+        std::string _realname;
+        bool _authenticationStatus;
     public:
-        Client(int fd, std::string password);
         int getFd() const;
+        std::string getNick() const;
+        std::string getUsername() const;
+        std::string getRealname() const;
         bool isAuthenticated() const;
-        void authenticate(std::string password);
-        void setNickname(std::string nickname);
-        void setUsername(std::string username);
-        void handleCommunication(int fd);
 
+        void setNick(const std::string &name);
+        void setUsername(const std::string &name, const std::string &realname);
+        void setAuthStatus(bool status);
+        void setPassword(const std::string &password);
+
+        bool isPasswordSet() const;
+        bool isNickSet() const;
+        bool isUserSet() const;
+
+        Client(int fd, bool status);
+        ~Client();
 };
 
 #endif

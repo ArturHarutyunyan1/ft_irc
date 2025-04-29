@@ -37,6 +37,9 @@ class Server
         std::map<std::string, Channel*> _channels;
         // Map of users and their fds
         std::map<std::string, int> _usernameToFd;
+        // Map of fd to Client pointer
+        std::map<int, Client*> _clients;
+        // Map of fd to username
         std::map<int, std::string> _fdToUsername;
     public:
         Server(int port, std::string password);

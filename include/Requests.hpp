@@ -15,13 +15,14 @@ class Requests
 {
     private:
         std::string _password;
+        std::string _username;
         char *_message;
         int _fd;
         struct pollfd *_fds;
-        bool _isSet;
         Server *_server;
+        Client *_client;
     public:
-        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet, Server *_server);
+        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet, Server *_server, Client *_client);
         // Requests(const Requests &copy);
         // Requests &operator=(const Requests &copy);
         // ~Requests();
@@ -36,6 +37,7 @@ class Requests
         void MODE(Channel *channel, const std::string &flag, const std::string &extra);
         void sendToEveryone(Channel *channel, const std::string &message) const;
         void sendSystemMessage(int fd, const std::string &message) const;
+        bool authStatus() const;
 };
 
 #endif
