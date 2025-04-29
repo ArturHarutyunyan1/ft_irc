@@ -35,6 +35,7 @@ class Requests
         void INVITE(const std::string &channel, const std::string &nickname);
         void MODE(Channel *channel, const std::string &flag, const std::string &extra);
         void sendToEveryone(Channel *channel, const std::string &message) const;
+        void sendSystemMessage(int fd, const std::string &message) const;
 };
 
 #endif

@@ -226,12 +226,12 @@ void Requests::KICK(const std::string &channelName, const std::string &nickname)
                 sendToEveryone(channel, _server->getNick(this->_fd) + " kicked " + nickname + " from channel " + channelName + "\n");
                 channel->kickClient(nickname);
             } else {
-                PRIVMSG(_server->getNick(this->_fd), "You can't kick yourself\n");
+                sendSystemMessage(this->_fd, "You can't kick yourself\n");
             }
         } else
-            PRIVMSG(_server->getNick(this->_fd), "You are not operator\n");
+            sendSystemMessage(this->_fd, "You are not operator\n");
     } else
-        PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
+        sendSystemMessage(this->_fd, "No such channel " + channelName + "\n");
 }
 
 void Requests::TOPIC(const std::string &channelName, const std::string &topic) {
@@ -243,13 +243,13 @@ void Requests::TOPIC(const std::string &channelName, const std::string &topic) {
                 channel->setTopic(topic);
                 sendToEveryone(channel, "Channel topic was set to " + topic + "\n");
             } else
-                PRIVMSG(_server->getNick(this->_fd), "Only operator can set topic\n");
+                sendSystemMessage(this->_fd, "Only operator can set topic\n");
         } else {
             channel->setTopic(topic);
             sendToEveryone(channel, "Channel topic was set to " + topic + "\n");
         }
     } else
-        PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
+        sendSystemMessage(this->_fd, "No such channel " + channelName + "\n");
 }
 
 void Requests::sendToEveryone(Channel *channel, const std::string &message) const {
@@ -270,12 +270,12 @@ void Requests::INVITE(const std::string &channelName, const std::string &nicknam
 
         if (user != -1) {
             channel->inviteClient(nickname);
-            PRIVMSG(_server->getNick(user), _server->getNick(this->_fd) + " invited you to channel " + channelName + "\n");
+            sendSystemMessage(_server->getUser(nickname), _server->getNick(this->_fd) + " invited you to channel " + channelName + "\n");
         } else {
-            PRIVMSG(_server->getNick(this->_fd), "No such user " + nickname + "\n");
+            sendSystemMessage(this->_fd, "No such user " + nickname + "\n");
         }
     } else {
-        PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
+        sendSystemMessage(this->_fd, "No such channel " + channelName + "\n");
     }
 }
 
@@ -302,13 +302,13 @@ void Requests::MODE(Channel *channel, const std::string &flag, const std::string
         if (_server->getUser(extra) != -1)
             channel->addOperator(extra);
         else
-            PRIVMSG(_server->getNick(this->_fd), "No such user " + extra);
+            sendSystemMessage(this->_fd, "No such user " + extra);
         sendToEveryone(channel, extra + " is operator now\n");
     } else if (flag == "-o") {
         if (_server->getUser(extra) != -1)
             channel->removeOperator(extra);
         else
-            PRIVMSG(_server->getNick(this->_fd), "No such user " + extra);
+            sendSystemMessage(this->_fd, "No such user " + extra);
         sendToEveryone(channel, extra + " is not operator\n");
     } else if (flag == "+l") {
         channel->setClientLimit(stringToInt(extra));
@@ -317,4 +317,8 @@ void Requests::MODE(Channel *channel, const std::string &flag, const std::string
         channel->setClientLimit(-1);
         sendToEveryone(channel, "Channel has no limit\n");
     }
+}
+
+void Requests::sendSystemMessage(int fd, const std::string &message) const {
+    send(fd, message.c_str(), message.size(), 0);
 }
