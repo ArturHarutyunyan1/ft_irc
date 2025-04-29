@@ -6,7 +6,7 @@ Channel::Channel(void) throw() : clientLimit(-1), isInviteOnly(false), isTopicSe
 }
 
 Channel::Channel(std::string const& creator) throw(std::bad_alloc)
-: clientLimit(-1), isInviteOnly(true),
+: clientLimit(-1), isInviteOnly(false),
 	isTopicSettableByOp(true) {
 	clients.insert(creator);
 	ops.insert(creator);

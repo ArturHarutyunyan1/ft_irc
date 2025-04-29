@@ -73,16 +73,23 @@ void Requests::handleRequest()
             response = "ERROR\nUsage - INVITE <nickname> <channel>\n";
     } else if (command == "MODE") {
         std::istringstream iss(message);
-        std::string target, flag, extra;
+        std::string target, channel, flag, extra;
 
-        iss >> target >> flag >> extra;
-        if (target.empty() || flag.empty() || !extra.empty() ||
-            flag.length() != 2 ||
-            (flag[0] != '+' && flag[0] != '-') ||
-            (flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l'))
-                response = "ERROR\nUsage MODE <target> <flag>\n";
+        iss >> target >> channel >> flag >> extra;
+
+        if (channel.empty() || flag.size() < 2 ||
+            (flag[0] != '-' && flag[0] != '+') ||
+            (flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l') ||
+            ((flag[1] == 'i' || flag[1] == 't' || (flag[0] == '-' && flag[1] == 'k') || (flag[0] == '-' && flag[1] == 'l')) && !extra.empty()) ||
+            (((flag[0] == '+' && flag[1] == 'k') || flag[1] == 'o' || (flag[0] == '+' && flag[1] == 'l')) && extra.empty()))
+            response = "ERROR\nUsage MODE <target> <flag> [<extra>]\n";
         else {
-            // HANDLE MODE COMMAND
+            Channel *channelPtr = _server->getChannel(channel);
+
+            if (channelPtr) {
+                MODE(channelPtr, flag, extra);
+            }else
+                response = "No such channel " + channel + "\n";
         }
     } else if (command == "PRIVMSG") {
         std::string target, text;
@@ -269,5 +276,45 @@ void Requests::INVITE(const std::string &channelName, const std::string &nicknam
         }
     } else {
         PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
+    }
+}
+
+void Requests::MODE(Channel *channel, const std::string &flag, const std::string &extra) {
+    if (flag == "+i") {
+        channel->setInviteOnly(true);
+        sendToEveryone(channel, "Channel was set to invite only\n");
+    } else if (flag == "-i") {
+        channel->setInviteOnly(false);
+        sendToEveryone(channel, "Channel is not invite only\n");
+    } else if (flag == "+t") {
+        channel->setTopicSettableByOp(true);
+        sendToEveryone(channel, "Only operator can set channel topic\n");
+    } else if (flag == "-t") {
+        channel->setTopicSettableByOp(false);
+        sendToEveryone(channel, "Everyone can set topic\n");
+    } else if (flag == "+k") {
+        channel->setKey(extra);
+        sendToEveryone(channel, "Channel has a password now\n");
+    } else if (flag == "-k") {
+        channel->setKey("");
+        sendToEveryone(channel, "Channel password was removed\n");
+    } else if (flag == "+o") {
+        if (_server->getUser(extra) != -1)
+            channel->addOperator(extra);
+        else
+            PRIVMSG(_server->getNick(this->_fd), "No such user " + extra);
+        sendToEveryone(channel, extra + " is operator now\n");
+    } else if (flag == "-o") {
+        if (_server->getUser(extra) != -1)
+            channel->removeOperator(extra);
+        else
+            PRIVMSG(_server->getNick(this->_fd), "No such user " + extra);
+        sendToEveryone(channel, extra + " is not operator\n");
+    } else if (flag == "+l") {
+        channel->setClientLimit(stringToInt(extra));
+        sendToEveryone(channel, "Channel has limit of " + extra + " clients\n");
+    } else if (flag == "-l") {
+        channel->setClientLimit(-1);
+        sendToEveryone(channel, "Channel has no limit\n");
     }
 }
