@@ -57,7 +57,7 @@ void Requests::handleRequest()
 
         iss >> channel;
         std::getline(iss >> std::ws, topic);
-        
+
         if (!channel.empty() && !topic.empty())
             TOPIC(channel, topic);
         else
@@ -68,7 +68,7 @@ void Requests::handleRequest()
 
         iss >> channel >> user >> extra;
         if (!channel.empty() && !user.empty() && extra.empty())
-            response = "INVITE command parsed for chanel=" + channel + " and user=" + user + "\n";
+            INVITE(channel, user);
         else
             response = "ERROR\nUsage - INVITE <nickname> <channel>\n";
     } else if (command == "MODE") {
@@ -153,7 +153,6 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
         send(user, msg.c_str(), msg.size(), 0);
     } else if (receiver[0] == '#') {
         Channel *channel = _server->getChannel(receiver);
-
         if (channel) {
             if (!channel->isClient(_server->getNick(this->_fd))) {
                 msg = "You are not in " + receiver + " channel\n";
@@ -193,19 +192,22 @@ std::string Requests::JOIN(const std::string &channelName, const std::string &ke
     }
     ChannelClientStatus status = channel->addClient(nickname, key);
 
-    std::string topic = "TOPIC - " + channel->getTopic() + "\n";
-    send(this->_fd, topic.c_str(), topic.size(), 0);
-
     if (status == CHANNEL_CLIENT_ALREADY_IN)
-        return "ERROR: You are already in the channel\n";
+        return ("ERROR: You are already in the channel\n");
     else if (status == CHANNEL_CLIENT_NOT_INVITED)
-        return "ERROR: Channel is invite-only\n";
+        return ("ERROR: Channel is invite-only\n");
     else if (status == CHANNEL_NOT_ENOUGH_PLACES)
-        return "ERROR: Channel is full\n";
+        return ("ERROR: Channel is full\n");
     else if (status == CHANNEL_INVALID_KEY)
-        return "ERROR: Invalid channel key\n";
+        return ("ERROR: Invalid channel key\n");
     else
-        return "You have joined channel " + channelName + "\n";
+    {
+        if (channel->getTopic().size() > 0) {
+            std::string topic = "TOPIC - " + channel->getTopic() + "\n";
+            send(this->_fd, topic.c_str(), topic.size(), 0);
+        }
+        return ("You have joined channel " + channelName + "\n");
+    }
 }
 
 void Requests::KICK(const std::string &channelName, const std::string &nickname) {
@@ -250,5 +252,22 @@ void Requests::sendToEveryone(Channel *channel, const std::string &message) cons
     {
         int clientFD = _server->getUser(*it);
         send(clientFD, message.c_str(), message.size(), 0);
+    }
+}
+
+void Requests::INVITE(const std::string &channelName, const std::string &nickname) {
+    Channel *channel = _server->getChannel(channelName);
+
+    if (channel) {
+        int user = _server->getUser(nickname);
+
+        if (user != -1) {
+            channel->inviteClient(nickname);
+            PRIVMSG(_server->getNick(user), _server->getNick(this->_fd) + " invited you to channel " + channelName + "\n");
+        } else {
+            PRIVMSG(_server->getNick(this->_fd), "No such user " + nickname + "\n");
+        }
+    } else {
+        PRIVMSG(_server->getNick(this->_fd), "No such channel " + channelName + "\n");
     }
 }
