@@ -22,7 +22,7 @@ class Requests
         Server *_server;
         Client *_client;
     public:
-        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet, Server *_server, Client *_client);
+        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server *_server, Client *_client);
         ~Requests();
         Requests(const Requests &other);
         Requests &operator=(const Requests &other);

@@ -95,7 +95,7 @@ void Server::newClient(int fd)
 
 void Server::handleRequest(int i)
 {
-    char buffer[100000] = {0};
+    char buffer[1024] = {0};
     size_t bytes;
 
     bytes = recv(this->_client_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
@@ -112,7 +112,7 @@ void Server::handleRequest(int i)
     }
     buffer[bytes] = '\0';
     Client *client = _clients[this->_client_fds[i].fd];
-    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), false, this, client);
+    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), this, client);
     req.handleRequest();
 }
 

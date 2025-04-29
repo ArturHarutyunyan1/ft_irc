@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, bool isSet, Server *_server, Client *_client)
+Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server *_server, Client *_client)
     : _password(_password), _message(msg), _fd(fd), _fds(fds), _server(_server), _client(_client)
 {}
 
@@ -26,7 +26,6 @@ Requests &Requests::operator=(const Requests &other)
 {
     if (this != &other)
     {
-        delete[] _message;
         _password = other._password;
         _username = other._username;
         _fd = other._fd;
@@ -48,7 +47,6 @@ Requests &Requests::operator=(const Requests &other)
 
 Requests::~Requests()
 {
-    delete[] _message;
 }
 
 void Requests::handleRequest()
