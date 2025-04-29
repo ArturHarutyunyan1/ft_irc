@@ -203,7 +203,7 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
     std::string msg;
 
     if (user != -1) {
-        msg = _server->getNick(this->_fd) + " says: " + message + "\n";
+        msg = ":" + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + "\n"; 
         send(user, msg.c_str(), msg.size(), 0);
     } else if (receiver[0] == '#') {
         Channel *channel = _server->getChannel(receiver);
@@ -218,7 +218,7 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
                     int clientFD = _server->getUser(*it);
 
                     if (clientFD != this->_fd) {
-                        msg = _server->getNick(this->_fd) + " says: " + message + "\n";
+                        msg = ":" + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + "\n"; 
                         send(clientFD, msg.c_str(), msg.size(), 0);
                     }
                 }

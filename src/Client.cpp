@@ -59,3 +59,11 @@ bool Client::isUserSet() const {
         return (true);
     return (false);
 }
+
+void Client::setIP(const std::string &ip) {
+    this->_ip = ip;
+}
+
+std::string Client::getIP() const {
+    return (this->_ip);
+}

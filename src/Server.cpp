@@ -20,7 +20,9 @@ std::string Server::getPassword() const
 
 void Server::newClient(int fd)
 {
-    int newFD = accept(fd, NULL, NULL);
+    sockaddr_in clientAddr;
+    socklen_t clientLen = sizeof(clientAddr);
+    int newFD = accept(fd, (struct sockaddr *)&clientAddr, &clientLen);
     if (newFD == -1)
     {
         perror("Accept error");
@@ -28,18 +30,27 @@ void Server::newClient(int fd)
     else
     {
         fcntl(newFD, F_SETFL, O_NONBLOCK);
+
+        char ipStr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
+        std::string ipAddress(ipStr);  // <- this is the IP
+
         bool slotFound = false;
         for (int i = 1; i < MAX_CONNECTIONS; i++) {
             if (this->_client_fds[i].fd == -1)
             {
                 this->_client_fds[i].fd = newFD;
                 this->_client_fds[i].events = POLLIN;
-                std::cout << "New client connected ✨" << std::endl;
+                std::cout << "New client connected ✨ IP: " << ipAddress << std::endl;
+
                 std::string welcome = welcomeMessage();
                 if (send(newFD, welcome.c_str(), welcome.size(), 0) == -1)
                     perror("Send error");
+
                 slotFound = true;
+
                 Client *newClient = new Client(newFD, false);
+                newClient->setIP(ipAddress);
                 _clients[newFD] = newClient;
                 break;
             }
@@ -52,6 +63,7 @@ void Server::newClient(int fd)
         }
     }
 }
+
 
 void Server::handleRequest(int i)
 {

@@ -31,6 +31,7 @@ class Server
 {
     private:
         int _port;
+        std::string _host;
         std::string _password;
         struct pollfd   *_client_fds;
         // Map of channels
