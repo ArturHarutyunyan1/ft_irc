@@ -1,5 +1,6 @@
 #include "../include/Utils.hpp"
 #include <sstream>
+#include <iostream>
 
 void setColor(int code)
 {
@@ -80,4 +81,38 @@ int stringToInt(const std::string &string)
     int res;
     ss >> res;
     return (res);
+}
+
+std::pair<std::string, std::string> getRequestBody(const std::string &msg)
+{
+    std::string host = "api.groq.com";
+    std::string apiKey = "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";
+    std::string endpoint = "/openai/v1/chat/completions";
+    std::string contentType = "Content-Type: application/json";
+    std::string bearer = "Authorization: Bearer " + apiKey;
+    std::string connection = "Connection: close";
+
+    std::string escapedMsg = escapeJson(msg);
+    std::string body =
+        "{\n"
+        "\"model\": \"llama-3.3-70b-versatile\",\n"
+        "\"messages\": [{\"role\": \"user\", \"content\": \"" + escapedMsg + "\"}]\n"
+        "}";
+
+    std::string message =
+        "POST " + endpoint + " HTTP/1.1\n"
+        "Host: " + host + "\n"
+        + contentType + "\n"
+        + bearer + "\n"
+        + connection + "\n"
+        "Content-Length: " + intToStr(body.length()) + "\n"
+        + "\n"
+        + body;
+
+    std::pair<std::string, std::string> temp;
+    
+    temp.first = message;
+    temp.second = host;
+
+    return temp;
 }
