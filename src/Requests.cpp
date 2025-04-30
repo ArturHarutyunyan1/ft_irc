@@ -206,16 +206,6 @@ void Requests::handleRequest()
             else
                 response = JOIN(channel, key);
         }
-        else if (command == "SEND")
-        {
-            std::istringstream iss(args);
-            std::string receiver, file, extra;
-
-            iss >> receiver >> file >> extra;
-            if (receiver.empty() || file.empty() || !extra.empty())
-                response = "ERROR\nUsage - SEND <receiver> <file_location>\n";
-            SEND(receiver, file);
-        }
         else
         {
             response = "Unknown Command\n";
@@ -435,87 +425,3 @@ void Requests::sendSystemMessage(int fd, const std::string &message) const {
     send(fd, message.c_str(), message.size(), 0);
 }
 
-void Requests::SEND(const std::string &receiver, const std::string &filepath) {
-    int receiver_fd = _server->getUser(receiver);
-    std::string sender_nick = _server->getNick(this->_fd);
-
-    if (receiver_fd == -1) {
-        std::string err = "User " + receiver + " not found.\n";
-        send(this->_fd, err.c_str(), err.size(), 0);
-        return;
-    }
-
-    std::ifstream file(filepath.c_str(), std::ios::binary);
-    if (!file.is_open()) {
-        std::string err = "Could not open file.\n";
-        send(this->_fd, err.c_str(), err.size(), 0);
-        return;
-    }
-
-    // Get filename from filepath
-    std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
-
-    // Get file size
-    file.seekg(0, std::ios::end);
-    std::streamsize filesize = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    // Send file header: FILEFROM sender filename filesize\n
-    std::ostringstream oss;
-    oss << "FILEFROM " << sender_nick << " " << filename << " " << filesize << "\n";
-    std::string header = oss.str();
-    send(receiver_fd, header.c_str(), header.size(), 0);
-
-    // Send file content
-    char buffer[1024];
-    while (file.good()) {
-        file.read(buffer, sizeof(buffer));
-        std::streamsize bytesRead = file.gcount();
-        if (bytesRead > 0) {
-            send(receiver_fd, buffer, bytesRead, 0);
-        }
-    }
-    receiveFileFromServer(receiver_fd);
-    file.close();
-
-    std::string confirmation = "File sent successfully to " + receiver + "\n";
-    send(this->_fd, confirmation.c_str(), confirmation.size(), 0);
-}
-
-
-void Requests::receiveFileFromServer(int server_socket) {
-    char buffer[1024];
-
-    std::string header;
-    char ch;
-    while (recv(server_socket, &ch, 1, 0) > 0) {
-        if (ch == '\n') break;
-        header += ch;
-    }
-
-    std::istringstream iss(header);
-    std::string command, sender, filename;
-    std::streamsize filesize;
-
-    iss >> command >> sender >> filename >> filesize;
-    if (command != "FILEFROM") {
-        std::cerr << "Invalid file header.\n";
-        return;
-    }
-
-    std::ofstream outfile(filename.c_str(), std::ios::binary);
-    if (!outfile.is_open()) {
-        std::cerr << "Cannot open file for writing: " << filename << std::endl;
-        return;
-    }
-    std::streamsize totalReceived = 0;
-    while (totalReceived < filesize) {
-        ssize_t bytes = recv(server_socket, buffer, sizeof(buffer), 0);
-        if (bytes <= 0) break;
-        outfile.write(buffer, bytes);
-        totalReceived += bytes;
-    }
-
-    outfile.close();
-    std::cout << "File '" << filename << "' received from " << sender << ".\n";
-}

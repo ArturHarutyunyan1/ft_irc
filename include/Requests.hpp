@@ -38,8 +38,6 @@ class Requests
         void MODE(Channel *channel, const std::string &flag, const std::string &extra);
         void sendToEveryone(Channel *channel, const std::string &message) const;
         void sendSystemMessage(int fd, const std::string &message) const;
-        void SEND(const std::string &receiver, const std::string &file);
-        void receiveFileFromServer(int server_socket);
 };
 
 #endif
