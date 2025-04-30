@@ -1,5 +1,15 @@
 #include "../include/Server.hpp"
 
+Server *globalServer = NULL;
+
+void handleSignal(int s) {
+    (void)s;
+    std::cout << "Shutting down server...\n";
+    if (globalServer != NULL)
+        delete globalServer;
+    exit (0);
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 3) {
@@ -9,9 +19,9 @@ int main(int argc, char **argv)
         std::cerr << "Invalid port range\nUse values in range of 1024 to 65535" << std::endl;
         return (1);
     }
-    
-    Server server = Server(stringToInt(argv[1]), argv[2]);
-
-    server.start();
+    signal(SIGINT, handleSignal);
+    globalServer = new Server(stringToInt(argv[1]), argv[2]);
+    globalServer->start();
+    delete globalServer;
     return (0);
 }

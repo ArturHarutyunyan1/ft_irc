@@ -6,7 +6,17 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 }
 
 Server::~Server()
-{}
+{
+    std::cout << "Destructor" << std::endl;
+    delete[] _client_fds;
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        delete it->second;
+    }
+    _clients.clear();
+    _channels.clear();
+    _usernameToFd.clear();
+    _fdToUsername.clear();
+}
 
 Server::Server(const Server &other)
     : _port(other._port), _host(other._host), _password(other._password)
