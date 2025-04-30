@@ -29,32 +29,32 @@ Server::~Server()
     std::cout << "Server resources cleaned up." << std::endl;
 }
 
-// Server::Server(const Server &other)
-//     : _port(other._port), _host(other._host), _password(other._password)
-// {
-//     _client_fds = other._client_fds;
+Server::Server(const Server &other)
+    : _port(other._port), _host(other._host), _password(other._password)
+{
+    _client_fds = other._client_fds;
 
-//     _channels = other._channels;
-//     _usernameToFd = other._usernameToFd;
-//     _clients = other._clients;
-//     _fdToUsername = other._fdToUsername;
-// }
+    _channels = other._channels;
+    _usernameToFd = other._usernameToFd;
+    _clients = other._clients;
+    _fdToUsername = other._fdToUsername;
+}
 
-// Server &Server::operator=(const Server &other)
-// {
-//     if (this != &other)
-//     {
-//         _port = other._port;
-//         _host = other._host;
-//         _password = other._password;
-//         _client_fds = other._client_fds;
-//         _channels = other._channels;
-//         _usernameToFd = other._usernameToFd;
-//         _clients = other._clients;
-//         _fdToUsername = other._fdToUsername;
-//     }
-//     return *this;
-// }
+Server &Server::operator=(const Server &other)
+{
+    if (this != &other)
+    {
+        _port = other._port;
+        _host = other._host;
+        _password = other._password;
+        _client_fds = other._client_fds;
+        _channels = other._channels;
+        _usernameToFd = other._usernameToFd;
+        _clients = other._clients;
+        _fdToUsername = other._fdToUsername;
+    }
+    return *this;
+}
 
 void Server::cleanup() {
     std::cout << "Cleaning up all sockets..." << std::endl;
