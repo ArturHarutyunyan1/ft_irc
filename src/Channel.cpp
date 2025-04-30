@@ -53,11 +53,11 @@ throw(std::bad_alloc) {
         status = CHANNEL_NOT_ENOUGH_PLACES;
     else if (!this->key.empty() && this->key != key)
         status = CHANNEL_INVALID_KEY;
-    else
+    else {
         status = CHANNEL_OK;
-	// Need to insert client here
-	if (status == CHANNEL_OK)
-        clients.insert(nickname);
+    }
+    if (status == CHANNEL_OK)
+	    clients.insert(nickname);
     return status;
 }
 

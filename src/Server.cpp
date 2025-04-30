@@ -8,7 +8,16 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 Server::~Server()
 {
     std::cout << "Destructor" << std::endl;
+
+    for (int i = 0; i < MAX_CONNECTIONS; ++i) {
+        if (_client_fds[i].fd != -1) {
+            close(_client_fds[i].fd);
+            _client_fds[i].fd = -1;
+        }
+    }
+
     delete[] _client_fds;
+
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         delete it->second;
     }
@@ -16,6 +25,8 @@ Server::~Server()
     _channels.clear();
     _usernameToFd.clear();
     _fdToUsername.clear();
+
+    std::cout << "Server resources cleaned up." << std::endl;
 }
 
 Server::Server(const Server &other)
@@ -43,6 +54,28 @@ Server &Server::operator=(const Server &other)
         _fdToUsername = other._fdToUsername;
     }
     return *this;
+}
+
+void Server::cleanup() {
+    std::cout << "Cleaning up all sockets..." << std::endl;
+
+    for (int i = 0; i < MAX_CONNECTIONS; ++i) {
+        if (_client_fds[i].fd != -1) {
+            close(_client_fds[i].fd);
+            _client_fds[i].fd = -1;
+        }
+    }
+    int serverSocket = _client_fds[0].fd;
+    if (serverSocket != -1) {
+        close(serverSocket);
+        _client_fds[0].fd = -1;
+    }
+    for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        delete it->second;
+    }
+    _clients.clear();
+
+    std::cout << "All resources have been cleaned up." << std::endl;
 }
 
 

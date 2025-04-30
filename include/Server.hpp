@@ -59,6 +59,7 @@ class Server
         void removeUser(const std::string &nickname, int fd);
         Channel *getChannel(const std::string &channelName);
         void addChannel(const std::string &channelName, Channel *channel);
+        void cleanup();
 };
 
 #endif

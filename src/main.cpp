@@ -1,12 +1,15 @@
 #include "../include/Server.hpp"
-
+#include <signal.h>
 Server *globalServer = NULL;
 
 void handleSignal(int s) {
     (void)s;
     std::cout << "Shutting down server...\n";
     if (globalServer != NULL)
+    {
+        globalServer->cleanup();
         delete globalServer;
+    }
     exit (0);
 }
 

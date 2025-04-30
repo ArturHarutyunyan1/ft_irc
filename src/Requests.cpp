@@ -32,14 +32,14 @@ Requests &Requests::operator=(const Requests &other)
         _fds = other._fds;
         _server = other._server;
         _client = other._client;
-        if (other._message != nullptr)
+        if (other._message != NULL)
         {
             _message = new char[strlen(other._message) + 1];
             strcpy(_message, other._message);
         }
         else
         {
-            _message = nullptr;
+            _message = NULL;
         }
     }
     return *this;
@@ -47,6 +47,8 @@ Requests &Requests::operator=(const Requests &other)
 
 Requests::~Requests()
 {
+    if (_message != NULL)
+        delete[] _message;
 }
 
 void Requests::handleRequest()
