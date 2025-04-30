@@ -26,12 +26,15 @@ Requests &Requests::operator=(const Requests &other)
 {
     if (this != &other)
     {
+        delete[] _message;
+
         _password = other._password;
         _username = other._username;
         _fd = other._fd;
         _fds = other._fds;
         _server = other._server;
         _client = other._client;
+
         if (other._message != NULL)
         {
             _message = new char[strlen(other._message) + 1];
@@ -47,8 +50,6 @@ Requests &Requests::operator=(const Requests &other)
 
 Requests::~Requests()
 {
-    if (_message != NULL)
-        delete[] _message;
 }
 
 void Requests::handleRequest()
