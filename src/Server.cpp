@@ -136,11 +136,11 @@ void Server::botHandshake(Bot *bot, int idx)
     else
     {
         int ssl_err = SSL_get_error(bot->getSsl(), err);
-
+     
         if (ssl_err == SSL_ERROR_WANT_READ)
-            this->_client_fds[idx].events = POLLIN | POLLOUT;
+            this->_client_fds[idx].events = POLLIN;
         else if (ssl_err == SSL_ERROR_WANT_WRITE)
-            this->_client_fds[idx].events = POLLIN | POLLOUT;
+            this->_client_fds[idx].events = POLLOUT;
         else
         {
             ERR_print_errors_fp(stderr);
@@ -377,7 +377,7 @@ void Server::start()
         }
 
         for (int i = 0; i < MAX_CONNECTIONS; i++) {
-            if (this->_client_fds[i].revents & (POLLIN | POLLOUT | POLLERR)) {
+            if (this->_client_fds[i].revents & (POLLIN | POLLOUT)) {
                 if (this->_client_fds[i].fd == serverSocket)
                     newClient(serverSocket);
                 else
