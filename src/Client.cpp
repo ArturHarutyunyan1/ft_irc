@@ -89,3 +89,11 @@ void Client::setIP(const std::string &ip) {
 std::string Client::getIP() const {
     return (this->_ip);
 }
+
+std::set<std::string> Client::getChannels() const {
+    return (this->_channels);
+}
+
+void Client::addChannel(const std::string &channelName) {
+    this->_channels.insert(channelName);
+}

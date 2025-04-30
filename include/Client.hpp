@@ -17,6 +17,7 @@
 # include <sys/ioctl.h>
 # include <sys/poll.h>
 # include <netinet/in.h>
+# include <set>
 
 class Server;
 
@@ -30,12 +31,14 @@ class Client
         std::string _realname;
         std::string _ip;
         bool _authenticationStatus;
+        std::set<std::string> _channels;
     public:
         int getFd() const;
         std::string getNick() const;
         std::string getUsername() const;
         std::string getRealname() const;
         std::string getIP() const;
+        std::set<std::string> getChannels() const;
         bool isAuthenticated() const;
 
         void setNick(const std::string &name);
@@ -43,6 +46,7 @@ class Client
         void setAuthStatus(bool status);
         void setPassword(const std::string &password);
         void setIP(const std::string &ip);
+        void addChannel(const std::string &channelName);
 
         bool isPasswordSet() const;
         bool isNickSet() const;

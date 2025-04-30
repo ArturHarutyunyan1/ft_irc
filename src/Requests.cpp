@@ -223,7 +223,7 @@ std::string Requests::PASS(std::string msg)
 }
 
 std::string Requests::NICK(const std::string &nickname) {
-    if (!_client->isNickSet() && !_client->isUserSet() && _client->isPasswordSet()) {
+    if (_client->isPasswordSet()) {
         int existingFd = this->_server->getUser(nickname);
 
         if (existingFd != -1 && existingFd != this->_fd)
@@ -233,6 +233,13 @@ std::string Requests::NICK(const std::string &nickname) {
         std::string previousNick = this->_server->getNick(this->_fd);
         if (previousNick != "NULL")
             this->_server->removeUser(previousNick, this->_fd);
+        std::set<std::string> userChannels = _client->getChannels();
+        if (userChannels.size() > 0) {
+            for (std::set<std::string>::iterator it = userChannels.begin(); it != userChannels.end(); ++it) {
+                Channel *channel = _server->getChannel(*it);
+                channel->changeClientNickname(previousNick, nickname);
+            }
+        }
         this->_server->addUser(nickname, this->_fd);
         this->_server->addFd(this->_fd, nickname);
         this->_client->setNick(nickname);
@@ -285,6 +292,7 @@ std::string Requests::JOIN(const std::string &channelName, const std::string &ke
     if (!channel) {
         Channel *newChannel = new Channel(nickname);
         _server->addChannel(channelName, newChannel);
+        _client->addChannel(channelName);
         return ("Channel " + channelName + " was created\n");
     }
     ChannelClientStatus status = channel->addClient(nickname, key);
