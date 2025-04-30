@@ -1,6 +1,7 @@
 #include "../include/Requests.hpp"
 
 #include <cstring>
+#include <fstream>
 
 Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server *_server, Client *_client)
     : _password(_password), _message(msg), _fd(fd), _fds(fds), _server(_server), _client(_client)
@@ -256,8 +257,30 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
     std::string msg;
 
     if (user != -1) {
-        msg = ":" + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + "\n"; 
-        send(user, msg.c_str(), msg.size(), 0);
+        if (message[0] != '/') {
+            msg = ":" + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + "\n"; 
+            send(user, msg.c_str(), msg.size(), 0);
+        } else {
+            std::ifstream file(message, std::ios::binary);
+
+            if (!file.is_open()) {
+                msg = "Can't open file " + message + "\n";
+                send(this->_fd, msg.c_str(), msg.size(), 0);
+            } else {
+                char buffer[1024];
+                while (!file.eof()) {
+                    file.read(buffer, 1024);
+                    int bytes = file.gcount();
+                    if (send(user, buffer, bytes, 0) < 0) {
+                        std::cerr << "Error sending file\n";
+                        break;
+                    }
+                }
+                file.close();
+                msg = "File sent successfully\n";
+                send(user, msg.c_str(), msg.size(), 0);
+            }
+        }
     } else if (receiver[0] == '#') {
         Channel *channel = _server->getChannel(receiver);
         if (channel) {
