@@ -175,7 +175,7 @@ void Requests::handleRequest()
                     MODE(channelPtr, flag, extra);
                 }
                 else
-                    response = "No such channel " + channel + "\n";
+                    response = red + serverName + ": 412 " + _client->getNick() + " :No such channel" + reset + "\n";
             }
         }
         else if (command == "PRIVMSG")

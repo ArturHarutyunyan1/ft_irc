@@ -6,13 +6,17 @@ void Requests::KICK(const std::string &channelName, const std::string &nickname)
     if (channel) {
         if (channel->isOperator(_server->getNick(this->_fd))) {
             if (_server->getNick(this->_fd) != nickname) {
-                sendToEveryone(channel, _server->getNick(this->_fd) + " kicked " + nickname + " from channel " + channelName + "\n");
-                channel->kickClient(nickname);
+                if (_server->getUser(nickname) != -1 && channel->isClient(nickname)) {
+                    sendToEveryone(channel, yellow + serverName + " " + _client->getNick() + "@" + _client->getUsername() + "!" + _client->getIP() + " KICK " + channelName + " " + nickname + reset + "\n");
+                    channel->kickClient(nickname);
+                } else {
+                    sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client->getNick() + " :No such user " + nickname + reset + "\n");
+                }                
             } else {
-                sendSystemMessage(this->_fd, "You can't kick yourself\n");
+                sendSystemMessage(this->_fd, red + serverName + " :You can't kick yourself" + reset + "\n");
             }
         } else
-            sendSystemMessage(this->_fd, "You are not operator\n");
+            sendSystemMessage(this->_fd, red + serverName + " 482 :You must be operator" + reset + "\n");
     } else
-        sendSystemMessage(this->_fd, "No such channel " + channelName + "\n");
+        sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client->getNick() + " :No such channel " + channelName + reset + "\n");
 }
