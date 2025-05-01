@@ -7,13 +7,13 @@ void Requests::TOPIC(const std::string &channelName, const std::string &topic) {
         if (channel->getTopicSettableByOp()) {
             if (channel->isOperator(_server->getNick(this->_fd))) {
                 channel->setTopic(topic);
-                sendToEveryone(channel, "Channel topic was set to " + topic + "\n");
+                sendToEveryone(channel, yellow + serverName + " TOPIC " + channelName + " :" + topic + reset + "\n");
             } else
-                sendSystemMessage(this->_fd, "Only operator can set topic\n");
+                sendSystemMessage(this->_fd, red + serverName + " 482 :You must be operator" + reset + "\n");
         } else {
             channel->setTopic(topic);
-            sendToEveryone(channel, "Channel topic was set to " + topic + "\n");
+            sendToEveryone(channel, yellow + serverName + " TOPIC " + channelName + " :" + topic + reset + "\n");
         }
     } else
-        sendSystemMessage(this->_fd, "No such channel " + channelName + "\n");
+        sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client->getNick() + " :No such channel " + channelName + reset + "\n");
 }
