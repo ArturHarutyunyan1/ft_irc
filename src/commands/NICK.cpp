@@ -3,11 +3,12 @@
 std::string Requests::NICK(const std::string &nickname) {
     if (_client->isPasswordSet()) {
         int existingFd = this->_server->getUser(nickname);
-
+        if (nickname.empty())
+            return (red + serverName + " 431 :No nickname given" + reset + "\n");
         if (existingFd != -1 && existingFd != this->_fd)
-            return ("Nickname is already taken!\n");
+            return (red + serverName + " 433 " + nickname + " :Nickname is already in use" + reset + "\n");
         if (nickname.length() > 9)
-            return ("Maximum 9 characters\n");
+            return (red + serverName + " 432 " + nickname + " :Erroneous nickname" + reset + "\n");
         std::string previousNick = this->_server->getNick(this->_fd);
         if (previousNick != "NULL")
             this->_server->removeUser(previousNick, this->_fd);
@@ -21,7 +22,7 @@ std::string Requests::NICK(const std::string &nickname) {
         this->_server->addUser(nickname, this->_fd);
         this->_server->addFd(this->_fd, nickname);
         this->_client->setNick(nickname);
-        return ("Nickname was set to " + nickname + "\n");
+        return (green + ":" + nickname + "!user@" + _client->getIP() + " NICK :" + nickname + reset + "\n");
     } else
-        return ("You must enter password before creating NICK\n");
+        return (red + serverName + " 462 :You must enter password before crating NICK" + reset + "\n");
 }

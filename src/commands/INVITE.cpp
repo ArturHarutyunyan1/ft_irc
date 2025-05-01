@@ -8,11 +8,11 @@ void Requests::INVITE(const std::string &channelName, const std::string &nicknam
 
         if (user != -1) {
             channel->inviteClient(nickname);
-            sendSystemMessage(_server->getUser(nickname), _server->getNick(this->_fd) + " invited you to channel " + channelName + "\n");
+            sendSystemMessage(_server->getUser(nickname), green + serverName + " 341 " + _client->getNick() + " invited " + nickname + " to :" + channelName + reset + "\n");
         } else {
-            sendSystemMessage(this->_fd, "No such user " + nickname + "\n");
+            sendSystemMessage(this->_fd, red + serverName + " 401 " + _client->getNick() + " " + nickname + " :No such nickname" + reset + "\n");
         }
     } else {
-        sendSystemMessage(this->_fd, "No such channel " + channelName + "\n");
+        sendSystemMessage(this->_fd, red + serverName + " 401 " + _client->getNick() + " " + nickname + " :No such channel" + reset + "\n");
     }
 }

@@ -1,7 +1,11 @@
 #include "../include/Requests.hpp"
 
-#include <cstring>
-#include <fstream>
+std::string green = "\033[32m";
+std::string red = "\033[31m";
+std::string blue = "\033[34m";
+std::string yellow = "\033[33m";
+std::string reset = "\033[0m";  
+std::string serverName = ":super_mega_cool_irc_server";
 
 Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server *_server, Client *_client)
     : _password(_password), _message(msg), _fd(fd), _fds(fds), _server(_server), _client(_client)
@@ -103,16 +107,16 @@ void Requests::handleRequest()
             std::getline(iss >> std::ws, realname);
 
             if (username.empty() || value != "0" || asterix != "*" || realname.empty() || realname[0] != ':')
-                response = "ERROR\nUsage - USER <username> 0 * :<realname>\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - USER <username> 0 * :<realname>" + reset + "\n";
             else
             {
                 if (_client->isNickSet() && _client->isPasswordSet() && !_client->isUserSet())
                 {
                     realname = realname.substr(1);
                     _client->setUsername(username, realname);
-                    response = "Username was set to " + username + " and real name was set to " + realname + "\n";
+                    response = green + serverName + " 001 " + _client->getNick() + " :Welcome to Welcome to the Internet Relay Network " + _client->getNick() + "!" + _client->getUsername() + "@" + _client->getIP() + reset + "\n";
                 } else
-                    response = "You must set password and nickname first\n";
+                    response = red + serverName + " 462 :You must enter password and crate nick before creating USER" + reset + "\n";
             }
         }
         else if (command == "KICK")

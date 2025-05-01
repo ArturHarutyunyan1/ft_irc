@@ -5,29 +5,44 @@ std::string Requests::JOIN(const std::string &channelName, const std::string &ke
     std::string nickname = _server->getNick(this->_fd);
 
     if (nickname == "NULL")
-        return ("ERROR\nYou need to set nickname before joining channels\n");
+        return (red + serverName + " 451 :You have not registered" + reset + "\n");
     if (!channel) {
         Channel *newChannel = new Channel(nickname);
         _server->addChannel(channelName, newChannel);
         _client->addChannel(channelName);
-        return ("Channel " + channelName + " was created\n");
+        channel = newChannel;
+        sendToEveryone(channel, green + ":" + _client->getNick() + "!" + _client->getUsername() + "@" + _client->getIP() + " JOIN " + channelName + reset + "\n");
+        return ("");
     }
     ChannelClientStatus status = channel->addClient(nickname, key);
 
-    if (status == CHANNEL_CLIENT_ALREADY_IN)
-        return ("ERROR: You are already in the channel\n");
-    else if (status == CHANNEL_CLIENT_NOT_INVITED)
-        return ("ERROR: Channel is invite-only\n");
-    else if (status == CHANNEL_NOT_ENOUGH_PLACES)
-        return ("ERROR: Channel is full\n");
-    else if (status == CHANNEL_INVALID_KEY)
-        return ("ERROR: Invalid channel key\n");
+    if (status == CHANNEL_CLIENT_ALREADY_IN) {
+        return(red +
+            ":" + serverName + " 443 " + nickname + " " + channelName + " :You're already on that channel" + reset + "\n"
+        );
+    }
+    else if (status == CHANNEL_CLIENT_NOT_INVITED) {
+        return(red +
+            ":" + serverName + " 473 " + nickname + " " + channelName + " :Cannot join channel" + reset + "\n"
+        );
+    }
+    else if (status == CHANNEL_NOT_ENOUGH_PLACES) {
+        return(red +
+            ":" + serverName + " 471 " + nickname + " " + channelName + " :Cannot join channel" + reset + "\n"
+        );
+    }
+    else if (status == CHANNEL_INVALID_KEY) {
+        return(red +
+            ":" + serverName + " 475 " + nickname + " " + channelName + " :Cannot join channel" + reset + "\n"
+        );
+    }
     else
     {
-        if (channel->getTopic().size() > 0) {
-            std::string topic = "TOPIC - " + channel->getTopic() + "\n";
-            send(this->_fd, topic.c_str(), topic.size(), 0);
-        }
-        return ("You have joined channel " + channelName + "\n");
+        sendToEveryone(channel, green + ":" + _client->getNick() + "!" + _client->getUsername() + "@" + _client->getIP() + " JOIN " + channelName + reset + "\n");
+        if (channel->getTopic().size() > 0)
+            sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":" + channel->getTopic() + reset + "\n");
+        else
+            sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":No topic" + reset + "\n");        
+        return ("");
     }
 }
