@@ -81,7 +81,7 @@ void Requests::handleRequest()
         args = "";
     }
     if (!_client->isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER")
-        response = "You must authenticate first\nUse HELP command for additional information\n";
+        response = red + ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" + reset + "\n";
     else
     {
         if (command == "HELP" && args.empty())
@@ -107,7 +107,7 @@ void Requests::handleRequest()
             std::getline(iss >> std::ws, realname);
 
             if (username.empty() || value != "0" || asterix != "*" || realname.empty() || realname[0] != ':')
-                response = red + serverName + " 461 " + _client->getNick() + " :Usage - USER <username> 0 * :<realname>" + reset + "\n";
+                response = red + serverName + " 461 " + " :Usage - USER <username> 0 * :<realname>" + reset + "\n";
             else
             {
                 if (_client->isNickSet() && _client->isPasswordSet() && !_client->isUserSet())
@@ -127,7 +127,7 @@ void Requests::handleRequest()
             if (!channel.empty() && !user.empty() && extra.empty())
                 KICK(channel, user);
             else
-                response = "ERROR\nUsage - KICK <channel> <nick>\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - KICK <channel> <nick>" + reset + "\n";
         }
         else if (command == "TOPIC")
         {
@@ -140,7 +140,7 @@ void Requests::handleRequest()
             if (!channel.empty() && !topic.empty())
                 TOPIC(channel, topic);
             else
-                response = "ERROR\nUsage - TOPIC <channel> [<topic>]\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - TOPIC <channel> [<topic>]" + reset + "\n";
         }
         else if (command == "INVITE")
         {
@@ -151,7 +151,7 @@ void Requests::handleRequest()
             if (!channel.empty() && !user.empty() && extra.empty())
                 INVITE(channel, user);
             else
-                response = "ERROR\nUsage - INVITE <nickname> <channel>\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - INVITE <nickname> <channel>" + reset + "\n";
         }
         else if (command == "MODE")
         {
@@ -165,7 +165,7 @@ void Requests::handleRequest()
                 (flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l') ||
                 ((flag[1] == 'i' || flag[1] == 't' || (flag[0] == '-' && flag[1] == 'k') || (flag[0] == '-' && flag[1] == 'l')) && !extra.empty()) ||
                 (((flag[0] == '+' && flag[1] == 'k') || flag[1] == 'o' || (flag[0] == '+' && flag[1] == 'l')) && extra.empty()))
-                response = "ERROR\nUsage MODE <target> <flag> [<extra>]\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - MODE <target> <flag> [<extra>]" + reset + "\n";
             else
             {
                 Channel *channelPtr = _server->getChannel(channel);
@@ -184,7 +184,7 @@ void Requests::handleRequest()
 
             size_t colonPos = args.find(':');
             if (colonPos == std::string::npos)
-                response = "ERROR\nUsage - PRIVMSG <target> :<message>\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - PRIVMSG <target> :<message>" + reset + "\n";
             else
             {
                 target = args.substr(0, colonPos);
@@ -194,7 +194,7 @@ void Requests::handleRequest()
                 if (end != std::string::npos)
                     target = target.substr(0, end + 1);
                 if (target.empty() || text.empty())
-                    response = "ERROR\nUsage - PRIVMSG <target> :<message>\n";
+                    response = red + serverName + " 461 " + _client->getNick() + " :Usage - PRIVMSG <target> :<message>" + reset + "\n";
                 else
                     PRIVMSG(target, text);
             }
@@ -206,7 +206,7 @@ void Requests::handleRequest()
 
             iss >> channel >> key;
             if (channel.empty() || (channel[0] != '#'))
-                response = "ERROR\nUsage - JOIN <#channel>\n";
+                response = red + serverName + " 461 " + _client->getNick() + " :Usage - JOIN <#channel>" + reset + "\n";
             else
                 response = JOIN(channel, key);
         }
