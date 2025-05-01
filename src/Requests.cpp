@@ -211,7 +211,7 @@ void Requests::handleRequest()
                 response = JOIN(channel, key);
         }
         else
-            response = "Unknown Command\n";
+            response = red + serverName + " :No such command" + reset + "\n";
     }
     (void)this->_fds;
     send(this->_fd, response.c_str(), response.size(), 0);
