@@ -42,7 +42,17 @@ std::string Requests::JOIN(const std::string &channelName, const std::string &ke
         if (channel->getTopic().size() > 0)
             sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":" + channel->getTopic() + reset + "\n");
         else
-            sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":No topic" + reset + "\n");        
+            sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":No topic" + reset + "\n");
+        std::set<std::string> clients = channel->getClients();
+
+        sendSystemMessage(this->_fd, blue + serverName + ": 353 " + nickname + channelName + "\n");
+        for (std::set<std::string>::iterator it = clients.begin(); it != clients.end(); ++it) {
+            int clientFD = _server->getUser(*it);
+
+            sendSystemMessage(this->_fd, blue +  _server->getNick(clientFD) + " " + reset + "\n");
+        }
+        sendSystemMessage(this->_fd, blue + serverName + ": 366 " + channelName + " :End of NAMES list" + reset + "\n");
+        sendToEveryone(channel, reset);
         return ("");
     }
 }
