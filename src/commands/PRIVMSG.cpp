@@ -5,32 +5,24 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
     std::string msg;
 
     if (user != -1) {
-        msg = ":" + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + "\n"; 
-        send(user, msg.c_str(), msg.size(), 0);
+        sendSystemMessage(user, blue +  _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + reset + "\n");
     } else if (receiver[0] == '#') {
         Channel *channel = _server->getChannel(receiver);
         if (channel) {
             if (!channel->isClient(_server->getNick(this->_fd))) {
-                msg = "You are not in " + receiver + " channel\n";
-                send(this->_fd, msg.c_str(), msg.size(), 0);
+                sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client->getNick() + " :No such nickname" + reset + "\n");
             } else {
                 std::set<std::string> clients = channel->getClients();
 
                 for (std::set<std::string>::iterator it = clients.begin(); it != clients.end(); ++it) {
                     int clientFD = _server->getUser(*it);
 
-                    if (clientFD != this->_fd) {
-                        msg = ":" + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + "\n"; 
-                        send(clientFD, msg.c_str(), msg.size(), 0);
-                    }
+                    if (clientFD != this->_fd)
+                        sendSystemMessage(clientFD, blue + _server->getNick(this->_fd) + "!" + _client->getUsername() + "@" + _client->getIP() + " PRIVMSG " + receiver + " :" + message + reset + "\n");
                 }
             }
-        } else {
-            msg = "No such channel " + receiver + "\n";
-            send(this->_fd, msg.c_str(), msg.size(), 0);
-        }
-    } else {
-        msg = "No such user " + receiver + "\n";
-        send(this->_fd, msg.c_str(), msg.size(), 0);
-    }
+        } else
+        sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client->getNick() + " :No such channel" + reset + "\n");
+    } else
+        sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client->getNick() + " :No such nickname" + reset + "\n");
 }
