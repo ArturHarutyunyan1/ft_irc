@@ -32,7 +32,7 @@ public:
 	void PRIVMSG(const std::string &receiver, const std::string &message) const;
 	void KICK(const std::string &channel, const std::string &nickname);
 	void TOPIC(const std::string &channel, const std::string &topic);
-	void INVITE(const std::string &channel, const std::string &nickname);
+	void INVITE(const std::string &nickname, const std::string &channel);
 	void MODE(Channel& channel, const std::string &flag, const std::string &extra);
 	void sendToEveryone(Channel const& channel, const std::string &message) const;
 	void sendSystemMessage(int fd, const std::string &message) const;
@@ -45,6 +45,13 @@ private:
 	struct pollfd *_fds;
 	Server& _server;
 	Client& _client;
+
+	static std::string const green;
+	static std::string const red;
+	static std::string const blue;
+	static std::string const yellow;
+	static std::string const reset;
+	static std::string const serverName;
 
 	Requests(Requests const&);
 	Requests &operator=(Requests const&);

@@ -1,6 +1,6 @@
 #include "../../include/Requests.hpp"
 
-void Requests::INVITE(const std::string &channelName, const std::string &nickname) {
+void Requests::INVITE(const std::string &nickname, const std::string &channelName) {
 	Channel *channel = _server.getChannel(channelName);
 
 	if (channel) {
@@ -18,6 +18,6 @@ void Requests::INVITE(const std::string &channelName, const std::string &nicknam
 			sendSystemMessage(this->_fd, red + serverName + " 401 " + _client.getNick() + " " + nickname + " :No such nickname" + reset + "\n");
 		}
 	} else {
-		sendSystemMessage(this->_fd, red + serverName + " 401 " + _client.getNick() + " " + nickname + " :No such channel" + reset + "\n");
+		sendSystemMessage(this->_fd, red + serverName + " 401 " + _client.getNick() + " " + channelName + " :No such channel" + reset + "\n");
 	}
 }

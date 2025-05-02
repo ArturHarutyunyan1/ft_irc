@@ -11,7 +11,7 @@ void Requests::KICK(const std::string &channelName, const std::string &nickname)
 					channel->kickClient(nickname);
 				} else {
 					sendSystemMessage(this->_fd, red + serverName + ": 412 " + _client.getNick() + " :No such user " + nickname + reset + "\n");
-				}                
+				}
 			} else {
 				sendSystemMessage(this->_fd, red + serverName + " :You can't kick yourself" + reset + "\n");
 			}

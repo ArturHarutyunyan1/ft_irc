@@ -1,11 +1,11 @@
 #include "../include/Requests.hpp"
 
-std::string green = "\033[32m";
-std::string red = "\033[31m";
-std::string blue = "\033[34m";
-std::string yellow = "\033[33m";
-std::string reset = "\033[0m";  
-std::string serverName = ":super_mega_cool_irc_server";
+std::string const Requests::green = "\033[32m";
+std::string const Requests::red = "\033[31m";
+std::string const Requests::blue = "\033[34m";
+std::string const Requests::yellow = "\033[33m";
+std::string const Requests::reset = "\033[0m";  
+std::string const Requests::serverName = ":super_mega_cool_irc_server";
 
 Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server& _server, Client& _client)
 	: _password(_password), _message(msg), _fd(fd), _fds(fds), _server(_server), _client(_client)
