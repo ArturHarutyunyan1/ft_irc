@@ -309,7 +309,7 @@ void Requests::sendToEveryone(Channel const& channel, const std::string &message
 	}
 }
 
-void Requests::INVITE(std::string const& channelName,std::string const& nickname) {
+void Requests::INVITE(std::string const& channelName,std::string const& nickname) {  // bug
 	Channel *channel = _server.getChannel(channelName);
 
 	if (channel) {
