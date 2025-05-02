@@ -4,9 +4,18 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cstring>
+#include <fstream>
 #include "Client.hpp"
 #include "Server.hpp"
 #include "Utils.hpp"
+
+extern std::string green;
+extern std::string red;
+extern std::string blue;
+extern std::string yellow;
+extern std::string reset;
+extern std::string serverName;
 
 class Client;
 class Server;
