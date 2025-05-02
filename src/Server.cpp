@@ -2,9 +2,8 @@
 #include <cerrno>
 #include <sys/poll.h>
 #include "../include/Bot.hpp"
-#include <openssl/ssl.h>
-#include <openssl/err.h>
 #include <sys/socket.h>
+#include <algorithm>
 
 Server::Server(int port, std::string password) : _port(port), _password(password)
 {
@@ -12,7 +11,8 @@ Server::Server(int port, std::string password) : _port(port), _password(password
 }
 
 Server::~Server()
-{}
+{
+}
 
 int Server::getPort() const
 {
@@ -58,10 +58,13 @@ void Server::newClient(int fd)
 
 int Server::findFreeFdSlot()
 {
-    for (int i = 1; i < MAX_CONNECTIONS; i++)
+    if (this->_client_fds != NULL)
     {
-        if (this->_client_fds[i].fd == -1)
-            return i;
+        for (int i = 1; i < MAX_CONNECTIONS; i++)
+        {
+            if (this->_client_fds[i].fd == -1)
+                return i;
+        }
     }
 
     return -1;
@@ -69,33 +72,19 @@ int Server::findFreeFdSlot()
 
 Bot* Server::findBotBySocket(int socketFd)
 {
-    for (std::vector<Bot *>::iterator it = _botRequests.begin(); it != _botRequests.end(); ++it)
+    for (std::vector<Bot>::iterator it = _botRequests.begin(); it != _botRequests.end(); ++it)
     {
-        if ((*it)->getSocketFd() == socketFd)
-        {
-            return *it;
-        }
+        if ((*it).getSocketFd() == socketFd)
+            return &(*it);
     }
 
     return NULL;
 }
 
-void Server::cleanupBot(Bot* bot, int fdIndex)
+void Server::cleanupBot(Bot *bot, int fdIndex)
 {
     if (bot)
-    {
         bot->cleanup();
-
-        for (std::vector<Bot *>::iterator it = this->_botRequests.begin(); it != this->_botRequests.end(); it++)
-        {
-            if (*it == bot)
-            {
-                this->_botRequests.erase(it);
-                break;
-            }
-        }
-        delete bot;
-    }
 
     if (fdIndex >= 0 && fdIndex < MAX_CONNECTIONS)
     {
@@ -185,6 +174,7 @@ void Server::botReceiving(Bot *bot, int idx)
     char buffer[15192];
 
     int bytes = SSL_read(bot->getSsl(), buffer, sizeof(buffer) - 1);
+
     if (bytes > 0)
     {
         buffer[bytes] = '\0';
@@ -196,7 +186,7 @@ void Server::botReceiving(Bot *bot, int idx)
         {
             std::string extracted = bot->getResponse().substr(posContent + 11, posLogprobs - posContent - 15);
             std::string response = "bot: " + extracted + ".\n";
-
+            std::cout << "Bot response for " + this->getNick(bot->getClientFd()) + " is ready\n";
             send(bot->getClientFd(), response.c_str(), response.size(), 0);
             bot->setState(COMPLETE);
             cleanupBot(bot, idx);
@@ -234,8 +224,6 @@ void Server::handleRequestBot(int i)
         return;
     }
 
-    int botSocket = _client_fds[i].fd;
-
     if (bot->getState() == INIT && this->_client_fds[i].revents & POLLOUT)
         this->botInit(bot, i);
     else if (bot->getState() == HANDSHAKE && _client_fds[i].revents & (POLLIN | POLLOUT))
@@ -244,12 +232,12 @@ void Server::handleRequestBot(int i)
         this->botSending(bot, i);
     else if (bot->getState() == RECEIVING && _client_fds[i].revents & POLLIN)
         this->botReceiving(bot, i);
-    else if (_client_fds[i].revents & (POLLERR | POLLHUP))
-    {
-        std::cerr << "Bot socket error, FD: " << botSocket << ", revents: " << _client_fds[i].revents << std::endl;
-        std::string error = "bot: Socket error\n";
-        send(bot->getClientFd(), error.c_str(), error.size(), 0);
-    }
+    // else if (_client_fds[i].revents & (POLLERR | POLLHUP))
+    // {
+    //     std::cerr << "Bot socket error, FD: " << botSocket << ", revents: " << _client_fds[i].revents << std::endl;
+    //     std::string error = "bot: Socket error\n";
+    //     send(bot->getClientFd(), error.c_str(), error.size(), 0);
+    // }
 }
 
 void Server::handleRequest(int i) {
@@ -362,7 +350,7 @@ void Server::start()
         return;
     }
 
-    for (int i = 2; i < MAX_CONNECTIONS; i++) {
+    for (int i = 1; i < MAX_CONNECTIONS; i++) {
         this->_client_fds[i].fd = -1;
         this->_client_fds[i].events = 0;
     }
@@ -391,7 +379,7 @@ void Server::start()
 
 void Server::sendRequestToBot(std::string msg, int clientFd)
 {
-    Bot* bot = new Bot();
+    Bot bot = Bot();
 
     int fdIndex = findFreeFdSlot();
     if (fdIndex == -1)
@@ -399,13 +387,13 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
         std::string error = "bot: Server busy, try again later\n";
         send(clientFd, error.c_str(), error.size(), 0);
         bot->cleanup();
-        delete bot;
         return;
     }
 
     int botSocket = bot->getSocketFd();
 
     this->_botRequests.push_back(bot);
+
     this->_client_fds[fdIndex].fd = botSocket;
     this->_client_fds[fdIndex].events = 0;
 
@@ -444,5 +432,5 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
 
     bot->setClientFd(clientFd);
     bot->setState(INIT);
-    _client_fds[fdIndex].events = POLLOUT;
+    this->_client_fds[fdIndex].events = POLLOUT;
 }

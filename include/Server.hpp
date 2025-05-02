@@ -35,7 +35,7 @@ class Server
         int _port;
         std::string _password;
         struct pollfd   *_client_fds;
-        std::vector<Bot *> _botRequests;
+        std::map<int, Bot> _botRequests;
         // Map of channels
         // std::map<std::string, Channel> _channels;
         // Map of users and their fds

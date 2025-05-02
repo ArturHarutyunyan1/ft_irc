@@ -48,9 +48,6 @@ void Bot::cleanup()
     }
     if (this->getSocketFd() >= 0)
         close(this->_socketFd);
-
-    this->setRequest("");
-    this->setResponse("");
 }
 
 int Bot::getSocketFd()

@@ -2,8 +2,9 @@
 # define BOT_HPP
 
 #include <netinet/in.h>
-#include <openssl/ssl.h>
 #include <string>
+#include "openssl/ssl.h"
+#include "openssl/err.h"
 
 enum State
 {
