@@ -27,7 +27,7 @@ void Requests::MODE(Channel *channel, const std::string &flag, const std::string
                 channel->addOperator(extra);
             else
                 sendSystemMessage(this->_fd, red + serverName + " :No such user " + extra + reset + "\n");
-                sendToEveryone(channel, yellow + serverName + " : " + extra + " is operator now" + reset + "\n");
+            sendToEveryone(channel, yellow + serverName + " : " + extra + " is operator now" + reset + "\n");
         } else if (flag == "-o") {
             if (_server->getUser(extra) != -1)
                 channel->removeOperator(extra);
