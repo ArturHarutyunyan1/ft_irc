@@ -121,25 +121,46 @@ void Server::newClient(int fd)
 
 void Server::handleRequest(int i)
 {
-	char buffer[1024] = {0};
-	size_t bytes;
+    char buffer[1024] = {0};
+    int client_fd = this->_client_fds[i].fd;
+    ssize_t bytes = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
-	bytes = recv(this->_client_fds[i].fd, buffer, sizeof(buffer) - 1, 0);
-	if (bytes <= 0) {
-		if (bytes == 0) {
-			std::cout << "Client disconnected 🚪" << std::endl;
-		} else {
-			std::cerr << "Something went wrong" << std::endl;
-		}
-		close(this->_client_fds[i].fd);
-		this->_client_fds[i].fd = -1;
-		this->_client_fds[i].events = 0;
-		return;
-	}
-	buffer[bytes] = '\0';
-	Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), *this, _clients[this->_client_fds[i].fd]);
-	req.handleRequest();
+    if (bytes <= 0) {
+        if (bytes == 0) {
+            std::cout << "Client disconnected 🚪" << std::endl;
+        } else {
+            std::cerr << "recv() error" << std::endl;
+        }
+        close(client_fd);
+        this->_client_fds[i].fd = -1;
+        this->_client_fds[i].events = 0;
+        this->_clients.erase(client_fd);
+        _clientBuffers.erase(client_fd);
+        return;
+    }
+
+    buffer[bytes] = '\0';
+    std::string& raw = _clientBuffers[client_fd];
+    raw.append(buffer);
+
+    size_t pos;
+    while ((pos = raw.find("\n")) != std::string::npos) {
+        std::string line = raw.substr(0, pos);
+        raw.erase(0, pos + 1); // remove the line + newline
+
+        // Trim possible \r at the end
+        if (!line.empty() && line[line.size() - 1] == '\r') {
+            line.erase(line.size() - 1);
+        }
+
+        if (!line.empty()) {
+            Requests req(const_cast<char*>(line.c_str()), this->_client_fds, client_fd, getPassword(), *this, _clients[client_fd]);
+            req.handleRequest();
+        }
+    }
+	std::cout << buffer << std::endl;
 }
+
 
 void Server::addUser(const std::string &nickname, int fd) {
 	_usernameToFd[nickname] = fd;

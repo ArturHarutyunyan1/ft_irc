@@ -52,9 +52,10 @@ void Requests::handleRequest() {
 		command = message;
 		args = "";
 	}
-	if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER")
-		response = red + ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" + reset + "\n";
-	else {
+	response = message;
+	// if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER")
+	// 	response = red + ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" + reset + "\n";
+	// else {
 		if (command == "HELP" && args.empty())
 			response = helpMessage();
 		else if (command == "PASS")
@@ -70,7 +71,7 @@ void Requests::handleRequest() {
 			std::string realname;
 			std::getline(iss >> std::ws, realname);
 
-			if (username.empty() || value != "0" || asterix != "*" || realname.empty() || realname[0] != ':')
+			if (username.empty() || value.empty() || value.empty() || realname.empty() || realname[0] != ':')
 				response = "ERROR\nUsage - USER <username> 0 * :<realname>\n";
 			else {
 				if (_client.isNickSet() && _client.isPasswordSet() && !_client.isUserSet()) {
@@ -157,16 +158,29 @@ void Requests::handleRequest() {
 		{
 			std::istringstream iss(args);
 			std::string channel, key;
-
+			std::cerr << "[DEBUG] Raw message: '" << _message << "'" << std::endl;
 			iss >> channel >> key;
 			if (channel.empty() || (channel[0] != '#'))
 				response = red + serverName + " 461 " + _client.getNick() + " :Usage - JOIN <#channel>" + reset + "\n";
 			else
 				response = JOIN(channel, key);
 		}
+		else if (command == "CAP")
+		{
+			std::istringstream iss(args);
+			std::string arg, extra;
+
+			iss >> arg >> extra;
+			if (arg == "LS" && extra.empty())
+				response = ":server CAP * LS :multi-prefix sasl account-notify\n\r";
+			else if (arg == "REQ" && extra.empty())
+				response = ":server CAP * ACK :multi-prefix\n\r";
+			else if (arg == "END" && extra.empty())
+				response = ":server CAP * END\n\r";
+		}
 		else
 			response = red + serverName + " :No such command" + reset + "\n";
-	}
+	// }
 	(void)this->_fds;
 	send(this->_fd, response.c_str(), response.size(), 0);
 }
