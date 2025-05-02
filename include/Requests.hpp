@@ -11,33 +11,34 @@
 class Client;
 class Server;
 
-class Requests
-{
-    private:
-        std::string _password;
-        std::string _username;
-        char *_message;
-        int _fd;
-        struct pollfd *_fds;
-        Server *_server;
-        Client *_client;
-    public:
-        Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server *_server, Client *_client);
-        ~Requests();
-        Requests(const Requests &other);
-        Requests &operator=(const Requests &other);
-        
-        void handleRequest();
-        std::string PASS(std::string msg);
-        std::string NICK(const std::string &nickname);
-        std::string JOIN(const std::string &channel, const std::string &key);
-        void PRIVMSG(const std::string &receiver, const std::string &message) const;
-        void KICK(const std::string &channel, const std::string &nickname);
-        void TOPIC(const std::string &channel, const std::string &topic);
-        void INVITE(const std::string &channel, const std::string &nickname);
-        void MODE(Channel *channel, const std::string &flag, const std::string &extra);
-        void sendToEveryone(Channel *channel, const std::string &message) const;
-        void sendSystemMessage(int fd, const std::string &message) const;
+class Requests {
+public:
+	Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server& _server, Client& _client);
+	~Requests();
+	
+	void handleRequest();
+	std::string PASS(std::string const& msg);
+	std::string NICK(const std::string &nickname);
+	std::string JOIN(const std::string &channel, const std::string &key);
+	void PRIVMSG(const std::string &receiver, const std::string &message) const;
+	void KICK(const std::string &channel, const std::string &nickname);
+	void TOPIC(const std::string &channel, const std::string &topic);
+	void INVITE(const std::string &channel, const std::string &nickname);
+	void MODE(Channel& channel, const std::string &flag, const std::string &extra);
+	void sendToEveryone(Channel const& channel, const std::string &message) const;
+	void sendSystemMessage(int fd, const std::string &message) const;
+
+private:
+	std::string _password;
+	std::string _username;
+	char *_message;
+	int _fd;
+	struct pollfd *_fds;
+	Server& _server;
+	Client& _client;
+
+	Requests(Requests const&);
+	Requests &operator=(Requests const&);
 };
 
 #endif

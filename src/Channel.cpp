@@ -37,33 +37,34 @@ Channel&	Channel::operator=(Channel const& other) throw(std::bad_alloc) {
 
 ChannelClientStatus Channel::addClient(std::string const& nickname, std::string const& key)
 throw(std::bad_alloc) {
-    ChannelClientStatus status;
+	ChannelClientStatus status;
 
-    if (clients.find(nickname) != clients.end())
-        status = CHANNEL_CLIENT_ALREADY_IN;
-    else if (isInviteOnly) {
-        std::set<std::string>::iterator invitation;
-        if ((invitation = invited.find(nickname)) == invited.end())
-            status = CHANNEL_CLIENT_NOT_INVITED;
-        else {
-            status = CHANNEL_OK;
-            invited.erase(invitation);
-        }
-    } else if (clientLimit != -1 && clients.size() >= static_cast<size_t>(clientLimit)) // not compiling without cast
-        status = CHANNEL_NOT_ENOUGH_PLACES;
-    else if (!this->key.empty() && this->key != key)
-        status = CHANNEL_INVALID_KEY;
-    else {
-        status = CHANNEL_OK;
-    }
-    if (status == CHANNEL_OK)
-	    clients.insert(nickname);
-    return status;
+	if (clients.find(nickname) != clients.end())
+		status = CHANNEL_CLIENT_ALREADY_IN;
+	else if (isInviteOnly) {
+		std::set<std::string>::iterator invitation;
+		if ((invitation = invited.find(nickname)) == invited.end())
+			status = CHANNEL_CLIENT_NOT_INVITED;
+		else {
+			status = CHANNEL_OK;
+			invited.erase(invitation);
+		}
+	} else if (clientLimit != -1 && clients.size() >= static_cast<size_t>(clientLimit)) // not compiling without cast
+		status = CHANNEL_NOT_ENOUGH_PLACES;
+	else if (!this->key.empty() && this->key != key)
+		status = CHANNEL_INVALID_KEY;
+	else {
+		status = CHANNEL_OK;
+	}
+	if (status == CHANNEL_OK)
+		clients.insert(nickname);
+	return status;
 }
 
 
 void	Channel::kickClient(std::string const& nickname) throw() {
 	clients.erase(nickname);
+	invited.erase(nickname);
 	ops.erase(nickname);
 }
 
@@ -134,5 +135,5 @@ void	Channel::setClientLimit(int limit) throw() {
 }
 
 const std::set<std::string> &Channel::getClients(void) const throw() {
-    return (clients);
+	return (clients);
 }

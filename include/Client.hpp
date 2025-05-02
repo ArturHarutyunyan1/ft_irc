@@ -19,43 +19,40 @@
 # include <netinet/in.h>
 # include <set>
 
-class Server;
+class Client {
+	private:
+		std::string _password;
+		std::string _nick;
+		std::string _username;
+		std::string _realname;
+		std::string _ip;
+		std::set<std::string> _channels;
+	public:
+		std::string const& getNick() const;
+		std::string const& getUsername() const;
+		std::string const& getRealname() const;
+		std::string const& getIP() const;
+		std::set<std::string> const& getChannels() const;
+		bool isAuthenticated() const;
 
-class Client
-{
-    private:
-        int _fd;
-        std::string _password;
-        std::string _nick;
-        std::string _username;
-        std::string _realname;
-        std::string _ip;
-        bool _authenticationStatus;
-        std::set<std::string> _channels;
-    public:
-        int getFd() const;
-        std::string getNick() const;
-        std::string getUsername() const;
-        std::string getRealname() const;
-        std::string getIP() const;
-        std::set<std::string> getChannels() const;
-        bool isAuthenticated() const;
+		void setNick(const std::string &name);
+		void setUsername(const std::string &name, const std::string &realname);
+		void setPassword(const std::string &password);
+		void addChannel(const std::string &channelName);
 
-        void setNick(const std::string &name);
-        void setUsername(const std::string &name, const std::string &realname);
-        void setAuthStatus(bool status);
-        void setPassword(const std::string &password);
-        void setIP(const std::string &ip);
-        void addChannel(const std::string &channelName);
+		bool isPasswordSet() const;
+		bool isNickSet() const;
+		bool isUserSet() const;
 
-        bool isPasswordSet() const;
-        bool isNickSet() const;
-        bool isUserSet() const;
+		Client(std::string const& ip) throw(std::bad_alloc);
+		Client(void) throw(std::bad_alloc);
+		~Client();
+		Client(const Client &other);
 
-        Client(int fd, bool status);
-        ~Client();
-        Client(const Client &other);
-        Client &operator=(const Client &other);
+		Client &operator=(const Client &other);
+		bool	operator==(Client const& other) const throw();
+		bool	operator<(Client const& other) const throw();
+
 };
 
 #endif

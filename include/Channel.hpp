@@ -11,8 +11,12 @@
 
 class Channel {
 public:
+	Channel(void) throw();
 	Channel(std::string const& creator) throw(std::bad_alloc);
+	Channel(Channel const& other) throw(std::bad_alloc);
 	~Channel(void) throw();
+
+	Channel&	operator=(Channel const& other) throw(std::bad_alloc);
 
 	/*
 	Returns:
@@ -94,11 +98,6 @@ private:
 	int						clientLimit;
 	bool					isInviteOnly;
 	bool					isTopicSettableByOp;
-
-	Channel(Channel const& other) throw(std::bad_alloc);
-
-	Channel&	operator=(Channel const& other) throw(std::bad_alloc);
-	Channel(void) throw();
 };
 
 #endif

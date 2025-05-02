@@ -18,14 +18,6 @@ Server::~Server()
 
     delete[] _client_fds;
 
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-        delete it->second;
-    }
-    _clients.clear();
-    _channels.clear();
-    _usernameToFd.clear();
-    _fdToUsername.clear();
-
     std::cout << "Server resources cleaned up." << std::endl;
 }
 
@@ -37,7 +29,6 @@ Server::Server(const Server &other)
     _channels = other._channels;
     _usernameToFd = other._usernameToFd;
     _clients = other._clients;
-    _fdToUsername = other._fdToUsername;
 }
 
 Server &Server::operator=(const Server &other)
@@ -51,7 +42,6 @@ Server &Server::operator=(const Server &other)
         _channels = other._channels;
         _usernameToFd = other._usernameToFd;
         _clients = other._clients;
-        _fdToUsername = other._fdToUsername;
     }
     return *this;
 }
@@ -70,13 +60,6 @@ void Server::cleanup() {
         close(serverSocket);
         _client_fds[0].fd = -1;
     }
-    for (std::map<int, Client *>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-        delete it->second;
-    }
-    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-        delete it->second;
-    _clients.clear();
-    _channels.clear();
     std::cout << "All resources have been cleaned up." << std::endl;
 }
 
@@ -86,7 +69,7 @@ int Server::getPort() const
     return (this->_port);
 }
 
-std::string Server::getPassword() const
+std::string const& Server::getPassword() const
 {
     return (this->_password);
 }
@@ -122,9 +105,7 @@ void Server::newClient(int fd)
 
                 slotFound = true;
 
-                Client *newClient = new Client(newFD, false);
-                newClient->setIP(ipAddress);
-                _clients[newFD] = newClient;
+                _clients[newFD] = Client(ipAddress);
                 break;
             }
         }
@@ -156,45 +137,16 @@ void Server::handleRequest(int i)
         return;
     }
     buffer[bytes] = '\0';
-    Client *client = _clients[this->_client_fds[i].fd];
-    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), this, client);
+    Requests req(buffer, this->_client_fds, this->_client_fds[i].fd, getPassword(), *this, _clients[this->_client_fds[i].fd]);
     req.handleRequest();
 }
 
 void Server::addUser(const std::string &nickname, int fd) {
-    std::map<std::string, int>::iterator it = _usernameToFd.find(nickname);
-
-    if (it != _usernameToFd.end()) {
-        _usernameToFd.erase(it);
-    }
     _usernameToFd[nickname] = fd;
 }
 
-void Server::addFd(int fd, const std::string &username) {
-    std::map<int, std::string>::iterator it = _fdToUsername.find(fd);
-
-    if (it != _fdToUsername.end()) {
-        _fdToUsername.erase(it);
-    }
-    _fdToUsername[fd] = username;
-}
-
-void Server::removeUser(const std::string &nickname, int fd) {
-    std::map<std::string, int>::iterator usernameIterator = _usernameToFd.find(nickname);
-    std::map<int, std::string>::iterator fdIterator = _fdToUsername.find(fd);
-
-    if (usernameIterator != _usernameToFd.end())
-        _usernameToFd.erase(usernameIterator);
-    if (fdIterator != _fdToUsername.end())
-        _fdToUsername.erase(fdIterator);
-}
-
-std::string Server::getNick(int fd) const {
-    std::map<int, std::string>::const_iterator it = _fdToUsername.find(fd);
-
-    if (it != _fdToUsername.end())
-        return (it->second);
-    return ("NULL");
+void Server::removeUser(const std::string &nickname) {
+    _usernameToFd.erase(nickname);
 }
 
 int Server::getUser(const std::string &nickname) const {
@@ -206,14 +158,14 @@ int Server::getUser(const std::string &nickname) const {
 }
 
 Channel *Server::getChannel(const std::string &channelName) {
-    std::map<std::string, Channel*>::iterator it = _channels.find(channelName);
+    std::map<std::string, Channel>::iterator it = _channels.find(channelName);
 
     if (it != _channels.end())
-        return (it->second);
+        return &(it->second);
     return (NULL);
 }
 
-void Server::addChannel(const std::string &channelName, Channel *channel) {
+void Server::addChannel(const std::string &channelName, Channel& channel) {
     _channels[channelName] = channel;
 }
 
