@@ -157,8 +157,8 @@ void Server::handleRequest(int i)
             req.handleRequest();
         }
     }
+	std::cout << buffer << std::endl;
 }
-
 
 void Server::addUser(const std::string &nickname, int fd) {
 	_usernameToFd[nickname] = fd;

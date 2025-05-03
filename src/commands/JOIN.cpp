@@ -1,56 +1,50 @@
 #include "../../include/Requests.hpp"
 
-std::string Requests::JOIN(const std::string &channelName, const std::string &key) {
+void Requests::JOIN(const std::string &channelName, const std::string &key) {
 	Channel *channel = _server.getChannel(channelName);
 	std::string const& nickname = _client.getNick();
 
 	if (!_client.isNickSet())
-		return (red + serverName + " 451 :You have not registered" + reset + "\n");
+		sendSystemMessage(this->_fd, serverName + " 451 " + nickname + " JOIN :You have not registered\n");
 	if (!channel) {
 		Channel newChannel = Channel(nickname);
 		_server.addChannel(channelName, newChannel);
 		_client.addChannel(channelName);
 		channel = _server.getChannel(channelName);
-		sendToEveryone(*channel, green + ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " JOIN " + channelName + reset + "\n");
-		return ("");
+		sendToEveryone(*channel, ":" + nickname + "!" + _client.getUsername() + "@" + _client.getIP() + " JOIN " + channelName + "\n");
+		return;
 	}
 	ChannelClientStatus status = channel->addClient(nickname, key);
 
 	if (status == CHANNEL_CLIENT_ALREADY_IN) {
-		return(red +
-			":" + serverName + " 443 " + nickname + " " + channelName + " :You're already on that channel" + reset + "\n"
-		);
+		sendSystemMessage(this->_fd, serverName + " 443 " + nickname + " " + channelName + " :is already on channel\n");
 	}
 	else if (status == CHANNEL_CLIENT_NOT_INVITED) {
-		return(red +
-			":" + serverName + " 473 " + nickname + " " + channelName + " :Cannot join channel" + reset + "\n"
-		);
+		sendSystemMessage(this->_fd, serverName + " 473 " + nickname + " " + channelName + " :Cannot join channel (+i)\n");
 	}
 	else if (status == CHANNEL_NOT_ENOUGH_PLACES) {
-		return(red +
-			":" + serverName + " 471 " + nickname + " " + channelName + " :Cannot join channel" + reset + "\n"
-		);
+		sendSystemMessage(this->_fd, serverName + " 471 " + nickname + " " + channelName + " :Cannot join channel (+l)\n");
 	}
 	else if (status == CHANNEL_INVALID_KEY) {
-		return(red +
-			":" + serverName + " 475 " + nickname + " " + channelName + " :Cannot join channel" + reset + "\n"
-		);
+		sendSystemMessage(this->_fd, serverName + " 475 " + nickname + " " + channelName + " :Cannot join channel (+k)\n");
 	}
 	else
 	{
-		sendToEveryone(*channel, green + ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " JOIN " + channelName + reset + "\n");
+		sendToEveryone(*channel, ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " JOIN " + channelName + "\n");
 		if (channel->getTopic().size() > 0)
-			sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":" + channel->getTopic() + reset + "\n");
+			sendSystemMessage(this->_fd,  serverName + " 332 " + nickname + " " + channelName + " :" + channel->getTopic() + "\n");
 		else
-			sendSystemMessage(this->_fd, yellow + serverName + ": 332 " + nickname + " " + channelName + ":No topic" + reset + "\n");
+			sendSystemMessage(this->_fd,  serverName + " 332 " + nickname + " " + channelName + " :No topic\n");
+		
 		std::set<std::string> clients = channel->getClients();
-
-		sendSystemMessage(this->_fd, blue + serverName + ": 353 " + nickname + channelName + "\n");
+		std::string namesLine;
 		for (std::set<std::string>::iterator it = clients.begin(); it != clients.end(); ++it) {
-			sendSystemMessage(this->_fd, blue +  *it + " " + reset + "\n");
+			namesLine += *it + " ";
 		}
-		sendSystemMessage(this->_fd, blue + serverName + ": 366 " + channelName + " :End of NAMES list" + reset + "\n");
-		sendToEveryone(*channel, reset);
-		return ("");
+		if (!namesLine.empty())
+			namesLine.pop_back();
+
+		sendSystemMessage(this->_fd, namesLine + "\n");
+		sendSystemMessage(this->_fd, serverName + " 366 " + nickname + " " + channelName + " :End of NAMES list\n");
 	}
 }

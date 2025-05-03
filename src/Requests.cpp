@@ -1,10 +1,5 @@
 #include "../include/Requests.hpp"
 
-std::string const Requests::green = "\033[32m";
-std::string const Requests::red = "\033[31m";
-std::string const Requests::blue = "\033[34m";
-std::string const Requests::yellow = "\033[33m";
-std::string const Requests::reset = "\033[0m";  
 std::string const Requests::serverName = ":super_mega_cool_irc_server";
 
 Requests::Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server& _server, Client& _client)
@@ -52,8 +47,7 @@ void Requests::handleRequest() {
 		command = message;
 		args = "";
 	}
-	response = message;
-	if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER" && command != "CAP")
+	if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER")
 		response =  ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" +  "\n";
 	else {
 		if (command == "HELP" && args.empty())
@@ -71,15 +65,15 @@ void Requests::handleRequest() {
 			std::string realname;
 			std::getline(iss >> std::ws, realname);
 
-			if (username.empty() || value.empty() || value.empty() || realname.empty() || realname[0] != ':')
-				response = "ERROR\nUsage - USER <username> 0 * :<realname>\n";
+			if (username.empty() || value.empty() || asterix.empty() || realname.empty() || realname[0] != ':')
+				response = "ERROR\nUsage: USER <username> 0 * :<realname>\n";
 			else {
 				if (_client.isNickSet() && _client.isPasswordSet() && !_client.isUserSet()) {
 					realname = realname.substr(1);
 					_client.setUsername(username, realname);
-					response = serverName + " 001 " + _client.getNick() + " :Welcome to Welcome to the Internet Relay Network " + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP()  + "\n";
+					response =  serverName + " 001 " + _client.getNick() + " :Welcome to Welcome to the Internet Relay Network " + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() +  "\n";
 				} else
-					response = serverName + " 462 :You must enter password and crate nick before creating USER"  + "\n";
+					response =  serverName + " 462 :You must enter password and crate nick before creating USER" +  "\n";
 			}
 		} else if (command == "KICK") {
 			std::istringstream iss(args);
@@ -120,14 +114,14 @@ void Requests::handleRequest() {
 				(flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l') ||
 				((flag[1] == 'i' || flag[1] == 't' || (flag[0] == '-' && flag[1] == 'k') || (flag[0] == '-' && flag[1] == 'l')) && !extra.empty()) ||
 				(((flag[0] == '+' && flag[1] == 'k') || flag[1] == 'o' || (flag[0] == '+' && flag[1] == 'l')) && extra.empty()))
-				response =  serverName + " 461 " + _client.getNick() + " :Usage - MODE <target> <flag> [<extra>]" +  "\n";
+					response = serverName + " 461 " + _client.getNick() + " :Usage - MODE <target> <flag> [<extra>]\n";
 			else
 			{
 				Channel *channelPtr = _server.getChannel(channel);
 
 				if (channelPtr)
 				{
-					MODE(*channelPtr, flag, extra);
+					MODE(*channelPtr, target, flag, extra);
 				}
 				else
 					response =  serverName + ": 412 " + _client.getNick() + " :No such channel" +  "\n";
@@ -139,7 +133,7 @@ void Requests::handleRequest() {
 
 			size_t colonPos = args.find(':');
 			if (colonPos == std::string::npos)
-				response =  serverName + " 461 " + _client.getNick() + " :Usage - PRIVMSG <target> :<message>" +  "\n";
+				response = serverName + " 461 " + _client.getNick() + " :Usage - PRIVMSG <target> :<message>\n";
 			else
 			{
 				target = args.substr(0, colonPos);
@@ -158,41 +152,12 @@ void Requests::handleRequest() {
 		{
 			std::istringstream iss(args);
 			std::string channel, key;
+
 			iss >> channel >> key;
 			if (channel.empty() || (channel[0] != '#'))
-				response =  serverName + " 461 " + _client.getNick() + " :Usage - JOIN <#channel>" +  "\n";
+				response = serverName + " 461 " + _client.getNick() + " :Usage - JOIN <#channel>\n";
 			else
-				response = JOIN(channel, key);
-		}
-		else if (command == "CAP")
-		{
-			std::istringstream iss(args);
-			std::string arg, extra;
-
-			iss >> arg >> extra;
-			if (arg == "LS" && extra.empty())
-				response =   serverName + ":CAP * LS :multi-prefix sasl account-notify\n\r";
-			else if (arg == "REQ" && extra.empty())
-				response = ":server CAP * ACK :multi-prefix\n\r";
-			else if (arg == "END" && extra.empty())
-				response = ":server CAP * END\n\r";
-		}
-		else if (command == "PART")
-		{
-			std::istringstream iss(args);
-			std::string name, extra;
-		
-			iss >> name >> extra;
-			if (name.empty() || name[0] != '#' || !extra.empty()) {
-				response = serverName + " 461 " + _client.getNick() + " :Usage - PART <channel>\n";
-			} else {
-				Channel *channel = _server.getChannel(name);
-				if (channel && channel->isClient(_client.getNick())) {
-					sendToEveryone(*channel,
-						":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " PART " + name + "\r\n");					
-					channel->kickClient(_client.getNick());
-				}
-			}
+				JOIN(channel, key);
 		}
 		else
 			response =  serverName + " :No such command" +  "\n";
