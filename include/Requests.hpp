@@ -30,7 +30,7 @@ public:
 	std::string NICK(const std::string &nickname);
 	void JOIN(const std::string &channelName, const std::string &key);
 	void PRIVMSG(const std::string &receiver, const std::string &message) const;
-	void KICK(const std::string &channel, const std::string &nickname);
+	void KICK(const std::string &channel, const std::string &nickname, const std::string &reason);
 	void TOPIC(const std::string &channel, const std::string &topic);
 	void INVITE(const std::string &nickname, const std::string &channel);
 	void MODE(Channel& channel, const std::string &channelname, const std::string &flag, const std::string &extra);

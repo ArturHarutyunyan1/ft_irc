@@ -137,3 +137,4 @@ void	Channel::setClientLimit(int limit) throw() {
 const std::set<std::string> &Channel::getClients(void) const throw() {
 	return (clients);
 }
+

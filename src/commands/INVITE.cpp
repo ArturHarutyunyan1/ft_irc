@@ -23,9 +23,12 @@ void Requests::INVITE(const std::string &nickname, const std::string &channelNam
 		sendSystemMessage(this->_fd, serverName + " 443 " + _client.getNick() + " " + nickname + " " + channelName + " :is already on channel\n");
 		return;
 	}
-
-	channel->inviteClient(nickname);
-	sendSystemMessage(this->_fd, serverName + " 341 " + _client.getNick() + " " + nickname + " " + channelName + "\n");
-	std::string prefix = ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP();
-	sendSystemMessage(userFD, prefix + " INVITE " + nickname + " :" + channelName + "\n");
+	if (channel->getInviteOnly() && !channel->isOperator(_client.getNick())) {
+		sendSystemMessage(this->_fd, serverName + " 482 " + _client.getNick() + " " + channelName + " :You're not channel operator\r\n");
+	} else {
+		channel->inviteClient(nickname);
+		sendSystemMessage(this->_fd, serverName + " 341 " + _client.getNick() + " " + nickname + " " + channelName + "\n");
+		std::string prefix = ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP();
+		sendSystemMessage(userFD, prefix + " INVITE " + nickname + " :" + channelName + "\n");
+	}
 }

@@ -70,6 +70,7 @@ public:
 	/*returns the topic settable by an operator only flag*/
 	bool	getTopicSettableByOp(void) const throw();
 
+
 	/*
 	Sets a channel's key.
 	If key string is empty then a channel's key is not set
@@ -88,6 +89,7 @@ public:
 	/*Sets maximum client count. If a new limit is less than a current client count in a channel,
 		ServerException is throwing*/
 	void	setClientLimit(int limit) throw();
+
 
 private:
 	std::set<std::string>	clients;

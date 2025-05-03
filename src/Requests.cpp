@@ -77,12 +77,19 @@ void Requests::handleRequest() {
 			}
 		} else if (command == "KICK") {
 			std::istringstream iss(args);
-			std::string channel, user, extra;
-			iss >> channel >> user >> extra;
-			if (!channel.empty() && !user.empty() && extra.empty())
-				KICK(channel, user);
-			else
-				response =  serverName + " 461 " + _client.getNick() + " :Usage - KICK <channel> <nick>" +  "\n";
+			std::string channel, user;
+			iss >> channel >> user;
+			
+			std::string reason;
+			std::getline(iss, reason);
+			if (!reason.empty() && reason[0] == ' ')
+				reason.erase(0, 1); // Remove leading space
+			
+			if (!channel.empty() && !user.empty()) {
+				KICK(channel, user, reason);
+			} else {
+				response = serverName + " 461 " + _client.getNick() + " :Usage - KICK <channel> <nick> [reason]" + "\n";
+			}
 		} else if (command == "TOPIC") {
 			std::istringstream iss(args);
 			std::string channel, topic;
