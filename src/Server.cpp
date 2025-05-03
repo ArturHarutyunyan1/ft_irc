@@ -146,9 +146,8 @@ void Server::handleRequest(int i)
     size_t pos;
     while ((pos = raw.find("\n")) != std::string::npos) {
         std::string line = raw.substr(0, pos);
-        raw.erase(0, pos + 1); // remove the line + newline
+        raw.erase(0, pos + 1);
 
-        // Trim possible \r at the end
         if (!line.empty() && line[line.size() - 1] == '\r') {
             line.erase(line.size() - 1);
         }
@@ -158,7 +157,6 @@ void Server::handleRequest(int i)
             req.handleRequest();
         }
     }
-	std::cout << buffer << std::endl;
 }
 
 
