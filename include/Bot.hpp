@@ -19,7 +19,6 @@ enum State
 class Bot
 {
     private:
-        int _socketFd;
         State _state;
         SSL_CTX* _sslCtx;
         SSL* _ssl;
@@ -34,9 +33,6 @@ class Bot
         void initSocket();
         void cleanup();
 
-        int getSocketFd();
-        void setSocketFd(int fd);
-        
         State getState();
         void setState(State state);
         

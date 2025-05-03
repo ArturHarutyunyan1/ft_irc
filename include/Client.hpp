@@ -17,25 +17,41 @@
 # include <sys/ioctl.h>
 # include <sys/poll.h>
 # include <netinet/in.h>
+# include <set>
 
-class Server;
+class Client {
+	private:
+		std::string _password;
+		std::string _nick;
+		std::string _username;
+		std::string _realname;
+		std::string _ip;
+		std::set<std::string> _channels;
+	public:
+		std::string const& getNick() const;
+		std::string const& getUsername() const;
+		std::string const& getRealname() const;
+		std::string const& getIP() const;
+		std::set<std::string> const& getChannels() const;
+		bool isAuthenticated() const;
 
-class Client
-{
-    private:
-        int _fd;
-        std::string _password;
-        std::string _nickname;
-        std::string _username;
-        bool _authenticated;
-    public:
-        Client(int fd, std::string password);
-        int getFd() const;
-        bool isAuthenticated() const;
-        void authenticate(std::string password);
-        void setNickname(std::string nickname);
-        void setUsername(std::string username);
-        void handleCommunication(int fd);
+		void setNick(const std::string &name);
+		void setUsername(const std::string &name, const std::string &realname);
+		void setPassword(const std::string &password);
+		void addChannel(const std::string &channelName);
+
+		bool isPasswordSet() const;
+		bool isNickSet() const;
+		bool isUserSet() const;
+
+		Client(std::string const& ip) throw(std::bad_alloc);
+		Client(void) throw(std::bad_alloc);
+		~Client();
+		Client(const Client &other);
+
+		Client &operator=(const Client &other);
+		bool	operator==(Client const& other) const throw();
+		bool	operator<(Client const& other) const throw();
 
 };
 

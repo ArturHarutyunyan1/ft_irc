@@ -22,15 +22,6 @@ void Bot::initSocket()
     this->setSslCtx(NULL);
     this->setSsl(NULL);
     this->setClientFd(-1);
-
-    this->_socketFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-
-    if (this->getSocketFd() < 0)
-    {
-        perror("socket");
-        // throw
-        return;
-    }
 }
 
 void Bot::cleanup()
@@ -46,18 +37,6 @@ void Bot::cleanup()
         SSL_CTX_free(this->_sslCtx);
         this->setSslCtx(NULL);
     }
-    if (this->getSocketFd() >= 0)
-        close(this->_socketFd);
-}
-
-int Bot::getSocketFd()
-{
-    return this->_socketFd;
-}
-
-void Bot::setSocketFd(int fd)
-{
-    this->_socketFd = fd;
 }
 
 State Bot::getState()
