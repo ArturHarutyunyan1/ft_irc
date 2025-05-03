@@ -42,7 +42,7 @@ void Requests::JOIN(const std::string &channelName, const std::string &key) {
 			namesLine += *it + " ";
 		}
 		if (!namesLine.empty())
-			namesLine.pop_back();
+			namesLine.erase(namesLine.length() - 1);
 
 		sendSystemMessage(this->_fd, namesLine + "\n");
 		sendSystemMessage(this->_fd, serverName + " 366 " + nickname + " " + channelName + " :End of NAMES list\n");
