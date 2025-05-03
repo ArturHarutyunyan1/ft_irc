@@ -85,3 +85,10 @@ std::set<std::string> const& Client::getChannels() const {
 void Client::addChannel(const std::string &channelName) {
 	this->_channels.insert(channelName);
 }
+
+void Client::removeChannel(const std::string &channel) {
+	std::set<std::string>::iterator it = _channels.find(channel);
+
+	if (it != _channels.end())
+		_channels.erase(it);
+}
