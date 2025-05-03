@@ -53,9 +53,9 @@ void Requests::handleRequest() {
 		args = "";
 	}
 	response = message;
-	// if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER")
-	// 	response = red + ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" + reset + "\n";
-	// else {
+	if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER" && command != "CAP")
+		response =  ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" +  "\n";
+	else {
 		if (command == "HELP" && args.empty())
 			response = helpMessage();
 		else if (command == "PASS")
@@ -77,9 +77,9 @@ void Requests::handleRequest() {
 				if (_client.isNickSet() && _client.isPasswordSet() && !_client.isUserSet()) {
 					realname = realname.substr(1);
 					_client.setUsername(username, realname);
-					response = green + serverName + " 001 " + _client.getNick() + " :Welcome to Welcome to the Internet Relay Network " + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + reset + "\n";
+					response = serverName + " 001 " + _client.getNick() + " :Welcome to Welcome to the Internet Relay Network " + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP()  + "\n";
 				} else
-					response = red + serverName + " 462 :You must enter password and crate nick before creating USER" + reset + "\n";
+					response = serverName + " 462 :You must enter password and crate nick before creating USER"  + "\n";
 			}
 		} else if (command == "KICK") {
 			std::istringstream iss(args);
@@ -88,7 +88,7 @@ void Requests::handleRequest() {
 			if (!channel.empty() && !user.empty() && extra.empty())
 				KICK(channel, user);
 			else
-				response = red + serverName + " 461 " + _client.getNick() + " :Usage - KICK <channel> <nick>" + reset + "\n";
+				response =  serverName + " 461 " + _client.getNick() + " :Usage - KICK <channel> <nick>" +  "\n";
 		} else if (command == "TOPIC") {
 			std::istringstream iss(args);
 			std::string channel, topic;
@@ -99,7 +99,7 @@ void Requests::handleRequest() {
 			if (!channel.empty() && !topic.empty())
 				TOPIC(channel, topic);
 			else
-				response = red + serverName + " 461 " + _client.getNick() + " :Usage - TOPIC <channel> [<topic>]" + reset + "\n";
+				response =  serverName + " 461 " + _client.getNick() + " :Usage - TOPIC <channel> [<topic>]" +  "\n";
 		} else if (command == "INVITE") {
 			std::istringstream iss(args);
 			std::string channel, user, extra;
@@ -108,7 +108,7 @@ void Requests::handleRequest() {
 			if (!channel.empty() && !user.empty() && extra.empty())
 				INVITE(channel, user);
 			else
-				response = red + serverName + " 461 " + _client.getNick() + " :Usage - INVITE <nickname> <channel>" + reset + "\n";
+				response =  serverName + " 461 " + _client.getNick() + " :Usage - INVITE <nickname> <channel>" +  "\n";
 		} else if (command == "MODE") {
 			std::istringstream iss(message);
 			std::string target, channel, flag, extra;
@@ -120,7 +120,7 @@ void Requests::handleRequest() {
 				(flag[1] != 'i' && flag[1] != 't' && flag[1] != 'k' && flag[1] != 'o' && flag[1] != 'l') ||
 				((flag[1] == 'i' || flag[1] == 't' || (flag[0] == '-' && flag[1] == 'k') || (flag[0] == '-' && flag[1] == 'l')) && !extra.empty()) ||
 				(((flag[0] == '+' && flag[1] == 'k') || flag[1] == 'o' || (flag[0] == '+' && flag[1] == 'l')) && extra.empty()))
-				response = red + serverName + " 461 " + _client.getNick() + " :Usage - MODE <target> <flag> [<extra>]" + reset + "\n";
+				response =  serverName + " 461 " + _client.getNick() + " :Usage - MODE <target> <flag> [<extra>]" +  "\n";
 			else
 			{
 				Channel *channelPtr = _server.getChannel(channel);
@@ -130,7 +130,7 @@ void Requests::handleRequest() {
 					MODE(*channelPtr, flag, extra);
 				}
 				else
-					response = red + serverName + ": 412 " + _client.getNick() + " :No such channel" + reset + "\n";
+					response =  serverName + ": 412 " + _client.getNick() + " :No such channel" +  "\n";
 			}
 		}
 		else if (command == "PRIVMSG")
@@ -139,7 +139,7 @@ void Requests::handleRequest() {
 
 			size_t colonPos = args.find(':');
 			if (colonPos == std::string::npos)
-				response = red + serverName + " 461 " + _client.getNick() + " :Usage - PRIVMSG <target> :<message>" + reset + "\n";
+				response =  serverName + " 461 " + _client.getNick() + " :Usage - PRIVMSG <target> :<message>" +  "\n";
 			else
 			{
 				target = args.substr(0, colonPos);
@@ -149,7 +149,7 @@ void Requests::handleRequest() {
 				if (end != std::string::npos)
 					target = target.substr(0, end + 1);
 				if (target.empty() || text.empty())
-					response = red + serverName + " 461 " + _client.getNick() + " :Usage - PRIVMSG <target> :<message>" + reset + "\n";
+					response =  serverName + " 461 " + _client.getNick() + " :Usage - PRIVMSG <target> :<message>" +  "\n";
 				else
 					PRIVMSG(target, text);
 			}
@@ -158,10 +158,9 @@ void Requests::handleRequest() {
 		{
 			std::istringstream iss(args);
 			std::string channel, key;
-			std::cerr << "[DEBUG] Raw message: '" << _message << "'" << std::endl;
 			iss >> channel >> key;
 			if (channel.empty() || (channel[0] != '#'))
-				response = red + serverName + " 461 " + _client.getNick() + " :Usage - JOIN <#channel>" + reset + "\n";
+				response =  serverName + " 461 " + _client.getNick() + " :Usage - JOIN <#channel>" +  "\n";
 			else
 				response = JOIN(channel, key);
 		}
@@ -172,15 +171,32 @@ void Requests::handleRequest() {
 
 			iss >> arg >> extra;
 			if (arg == "LS" && extra.empty())
-				response = ":server CAP * LS :multi-prefix sasl account-notify\n\r";
+				response =   serverName + ":CAP * LS :multi-prefix sasl account-notify\n\r";
 			else if (arg == "REQ" && extra.empty())
 				response = ":server CAP * ACK :multi-prefix\n\r";
 			else if (arg == "END" && extra.empty())
 				response = ":server CAP * END\n\r";
 		}
+		else if (command == "PART")
+		{
+			std::istringstream iss(args);
+			std::string name, extra;
+		
+			iss >> name >> extra;
+			if (name.empty() || name[0] != '#' || !extra.empty()) {
+				response = serverName + " 461 " + _client.getNick() + " :Usage - PART <channel>\n";
+			} else {
+				Channel *channel = _server.getChannel(name);
+				if (channel && channel->isClient(_client.getNick())) {
+					sendToEveryone(*channel,
+						":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " PART " + name + "\r\n");					
+					channel->kickClient(_client.getNick());
+				}
+			}
+		}
 		else
-			response = red + serverName + " :No such command" + reset + "\n";
-	// }
+			response =  serverName + " :No such command" +  "\n";
+	}
 	(void)this->_fds;
 	send(this->_fd, response.c_str(), response.size(), 0);
 }
