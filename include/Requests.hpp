@@ -29,12 +29,12 @@ public:
 	void handleRequest();
 	std::string PASS(std::string const &msg);
 	std::string NICK(const std::string &nickname);
-	std::string JOIN(const std::string &channel, const std::string &key);
-	int PRIVMSG(const std::string &receiver, const std::string &message) const;
-	void KICK(const std::string &channel, const std::string &nickname);
+	void JOIN(const std::string &channelName, const std::string &key);
+	void PRIVMSG(const std::string &receiver, const std::string &message) const;
+	void KICK(const std::string &channel, const std::string &nickname, const std::string &reason);
 	void TOPIC(const std::string &channel, const std::string &topic);
 	void INVITE(const std::string &nickname, const std::string &channel);
-	void MODE(Channel &channel, const std::string &flag, const std::string &extra);
+	void MODE(Channel &channel, const std::string &channelname, const std::string &flag, const std::string &extra);
 	void sendToEveryone(Channel const &channel, const std::string &message) const;
 	void sendSystemMessage(int fd, const std::string &message) const;
 

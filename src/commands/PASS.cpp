@@ -3,14 +3,18 @@
 
 std::string Requests::PASS(std::string const& msg)
 {
-	if (msg == _server.getPassword() && !_client.isAuthenticated() && !_client.isPasswordSet()) {
-		_client.setPassword(msg);
-		return (green + serverName + " 920 :Password accepted" + reset + "\n");
-	} else if (_client.isAuthenticated()) {
-		return (red + serverName + " 462 :You may not re register" + reset + "\n");
-	} else if (msg.empty()) {
-		return(red + serverName + " 461 :Not enough parameters" + reset + "\n");
-	} else {
-		return (red + serverName + " 464 :Invalid password" + reset + "\n");
-	}
+    if (msg.empty()) {
+        return (serverName + " 461 :Not enough parameters\n");
+    }
+    
+    if (_client.isAuthenticated()) {
+        return (serverName + " 462 :You are already registered\n");
+    }
+    
+    if (msg == _server.getPassword() && !_client.isPasswordSet()) {
+        _client.setPassword(msg);
+        return (serverName + " 920 :Password accepted\n");
+    } else {
+        return (serverName + " 464 :Invalid password\n");
+    }
 }

@@ -102,27 +102,22 @@ void Server::newClient(int fd)
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), ipStr, INET_ADDRSTRLEN);
 		std::string ipAddress(ipStr); // <- this is the IP
 
-		bool slotFound = false;
-		for (int i = 1; i < MAX_CONNECTIONS; i++)
+		int idx = this->findFreeFdSlot();
+
+		if (idx != -1)
 		{
-			if (this->_client_fds[i].fd == -1)
-			{
-				this->_client_fds[i].fd = newFD;
-				this->_client_fds[i].events = POLLIN;
-				std::cout << "New client connected ✨ IP: " << ipAddress << std::endl;
+			this->_client_fds[idx].fd = newFD;
+			this->_client_fds[idx].events = POLLIN;
+			std::cout << newFD << std::endl;
+			std::cout << "New client connected ✨ IP: " << ipAddress << std::endl;
 
-				std::string welcome = welcomeMessage();
-				if (send(newFD, welcome.c_str(), welcome.size(), 0) == -1)
-					perror("Send error");
+			std::string welcome = welcomeMessage();
+			if (send(newFD, welcome.c_str(), welcome.size(), 0) == -1)
+				perror("Send error");
 
-				slotFound = true;
-
-				_clients[newFD] = Client(ipAddress);
-				break;
-			}
+			_clients[newFD] = Client(ipAddress);
 		}
-
-		if (!slotFound)
+		else
 		{
 			std::cerr << "No available slots for new client" << std::endl;
 			close(newFD);
@@ -159,9 +154,9 @@ void Server::cleanupBot(Bot *bot, int fdIndex)
 	if (bot)
 		bot->cleanup();
 
-	if (fdIndex >= 0 && fdIndex < MAX_CONNECTIONS)
+	if (fdIndex > 1 && fdIndex < MAX_CONNECTIONS)
 	{
-		close(fdIndex);
+		close(this->_client_fds[fdIndex].fd);
 		this->_client_fds[fdIndex].fd = -1;
 		this->_client_fds[fdIndex].events = 0;
 	}
@@ -264,8 +259,8 @@ void Server::botReceiving(Bot *bot, int idx)
 		{
 			std::string extracted = bot->getResponse().substr(posContent + 11, posLogprobs - posContent - 15);
 			std::string response = "bot: " + extracted + ".\n";
-			std::cout << response << std::endl;
-			std::cout << "Bot response for " << bot->getClientFd() << " is ready\n";
+
+			std::cout << "Bot response for a client with socket #" << bot->getClientFd() << " is ready\n";
 
 			send(bot->getClientFd(), response.c_str(), response.size(), 0);
 			bot->setState(COMPLETE);
@@ -385,6 +380,14 @@ int Server::getUser(const std::string &nickname) const
 	return (-1);
 }
 
+void Server::removeChannel(const std::string &channelName)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+
+	if (it != _channels.end())
+		_channels.erase(it);
+}
+
 Channel *Server::getChannel(const std::string &channelName)
 {
 	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
@@ -473,8 +476,6 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
 
 	this->_botRequests[socketFd] = bot;
 
-	Bot &botRef = this->_botRequests[socketFd];
-
 	if (socketFd < 0)
 	{
 		perror("socket");
@@ -492,7 +493,8 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
 	}
 
 	this->_client_fds[fdIndex].fd = socketFd;
-	this->_client_fds[fdIndex].events = 0;
+
+	Bot &botRef = this->_botRequests[socketFd];
 
 	int port = 443;
 	std::pair<std::string, std::string> bodyHost = getRequestBody(msg);
