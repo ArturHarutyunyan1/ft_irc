@@ -176,6 +176,13 @@ int Server::getUser(const std::string &nickname) const {
 	return (-1);
 }
 
+void Server::removeChannel(const std::string &channelName) {
+	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
+
+	if (it != _channels.end())
+		_channels.erase(it);
+}
+
 Channel *Server::getChannel(const std::string &channelName) {
 	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
 

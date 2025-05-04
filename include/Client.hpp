@@ -39,6 +39,7 @@ class Client {
 		void setUsername(const std::string &name, const std::string &realname);
 		void setPassword(const std::string &password);
 		void addChannel(const std::string &channelName);
+		void removeChannel(const std::string &channelName);
 
 		bool isPasswordSet() const;
 		bool isNickSet() const;

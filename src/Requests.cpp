@@ -77,12 +77,19 @@ void Requests::handleRequest() {
 			}
 		} else if (command == "KICK") {
 			std::istringstream iss(args);
-			std::string channel, user, extra;
-			iss >> channel >> user >> extra;
-			if (!channel.empty() && !user.empty() && extra.empty())
-				KICK(channel, user);
-			else
-				response =  serverName + " 461 " + _client.getNick() + " :Usage - KICK <channel> <nick>" +  "\n";
+			std::string channel, user;
+			iss >> channel >> user;
+			
+			std::string reason;
+			std::getline(iss, reason);
+			if (!reason.empty() && reason[0] == ' ')
+				reason.erase(0, 1); // Remove leading space
+			
+			if (!channel.empty() && !user.empty()) {
+				KICK(channel, user, reason);
+			} else {
+				response = serverName + " 461 " + _client.getNick() + " :Usage - KICK <channel> <nick> [reason]" + "\n";
+			}
 		} else if (command == "TOPIC") {
 			std::istringstream iss(args);
 			std::string channel, topic;
@@ -159,6 +166,40 @@ void Requests::handleRequest() {
 			else
 				JOIN(channel, key);
 		}
+			else if (command == "PART")
+			{
+				std::istringstream iss(args);
+				std::string channelName;
+				iss >> channelName;
+			
+				std::string reason;
+				std::getline(iss >> std::ws, reason);
+				if (channelName.empty()) {
+					response = serverName + " 461 " + _client.getNick() + " :Usage - PART <#channel> [:<reason>]\r\n";
+				} else {
+					Channel *channel = _server.getChannel(channelName);
+
+					if (!channel) {
+						response = serverName + " 403 " + _client.getNick() + " " + channelName + " :No such channel\r\n";
+					} else if (!channel->isClient(_client.getNick())) {
+						response = serverName + " 442 " + _client.getNick() + " " + channelName + " :You're not on that channel\r\n";
+					} else {
+						if (!reason.empty() && reason[0] == ':')
+							reason = reason.substr(1);
+						std::string msg = ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " PART " + channelName;
+						if (!reason.empty()) {
+							msg += " :" + reason;
+						}
+						msg += "\r\n";
+						sendToEveryone(*channel, msg);
+						channel->kickClient(_client.getNick());
+						_client.removeChannel(channelName);
+
+						if (channel->getClients().size() == 0)
+							_server.removeChannel(channelName);
+					}
+				}
+			}
 		else
 			response =  serverName + " :No such command" +  "\n";
 	}

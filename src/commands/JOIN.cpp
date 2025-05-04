@@ -41,8 +41,6 @@ void Requests::JOIN(const std::string &channelName, const std::string &key) {
 		for (std::set<std::string>::iterator it = clients.begin(); it != clients.end(); ++it) {
 			namesLine += *it + " ";
 		}
-		if (!namesLine.empty())
-			namesLine.erase(namesLine.length() - 1);
 
 		sendSystemMessage(this->_fd, namesLine + "\n");
 		sendSystemMessage(this->_fd, serverName + " 366 " + nickname + " " + channelName + " :End of NAMES list\n");

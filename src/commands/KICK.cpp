@@ -1,6 +1,6 @@
 #include "../../include/Requests.hpp"
 
-void Requests::KICK(const std::string &channelName, const std::string &nickname) {
+void Requests::KICK(const std::string &channelName, const std::string &nickname, const std::string &reason) {
     Channel *channel = _server.getChannel(channelName);
 
     if (!channel) {
@@ -24,7 +24,15 @@ void Requests::KICK(const std::string &channelName, const std::string &nickname)
     }
 
     if (_server.getUser(nickname) != -1 && channel->isClient(nickname)) {
-        sendToEveryone(*channel, ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + " KICK " + channelName + " " + nickname + "\n");
+        std::string kickMessage = ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() +
+                                  " KICK " + channelName + " " + nickname;
+
+        if (!reason.empty())
+            kickMessage += " :" + reason;
+
+        kickMessage += "\n";
+
+        sendToEveryone(*channel, kickMessage);
         channel->kickClient(nickname);
     } else {
         sendSystemMessage(this->_fd, serverName + " 401 " + _client.getNick() + " " + nickname + " :No such nick\n");
