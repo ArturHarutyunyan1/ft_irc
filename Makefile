@@ -1,5 +1,6 @@
 NAME = ircserv
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -I./opssl/include
+LDFLAGS = -L./opssl/lib -lssl -lcrypto
 SRC = $(wildcard ./src/*.cpp) $(wildcard ./src/commands/*.cpp)
 INC = $(wildcard ./include/*.hpp )
 OBJ = ${SRC:.cpp=.o}

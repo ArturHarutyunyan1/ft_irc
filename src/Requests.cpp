@@ -231,33 +231,34 @@ void Requests::handleRequest()
 						_server.removeChannel(channelName);
 				}
 			}
-			else if (command == "PING")
-			{
+		} 
+		else if (command == "PING")
+		{
 				std::istringstream iss(args);
 
 				std::string msg;
 				std::getline(iss >> std::ws, msg);
 				response = "PONG :" + msg + "\r\n";
+		}
+		else if (command == "CAP") {
+			std::istringstream iss(args);
+			std::string subcmd;
+			iss >> subcmd;
+		
+			if (subcmd == "LS") {
+				response = "CAP * LS :multi-prefix sasl\r\n";
+			} else if (subcmd == "REQ") {
+				std::string capList;
+				std::getline(iss >> std::ws, capList);
+				if (!capList.empty() && capList[0] == ':')
+					capList = capList.substr(1);
+				response = "CAP * ACK :" + capList + "\r\n";
+			} else if (subcmd == "END") {
+				response = "";
+			} else {
+				response = "CAP * NAK :" + subcmd + "\r\n";
 			}
-			else if (command == "CAP") {
-				std::istringstream iss(args);
-				std::string subcmd;
-				iss >> subcmd;
-			
-				if (subcmd == "LS") {
-					response = "CAP * LS :multi-prefix sasl\r\n";
-				} else if (subcmd == "REQ") {
-					std::string capList;
-					std::getline(iss >> std::ws, capList);
-					if (!capList.empty() && capList[0] == ':')
-						capList = capList.substr(1);
-					response = "CAP * ACK :" + capList + "\r\n";
-				} else if (subcmd == "END") {
-					response = "";
-				} else {
-					response = "CAP * NAK :" + subcmd + "\r\n";
-				}
-			}
+		}
 		else
 			response = serverName + " :No such command" + "\n";
 	}
