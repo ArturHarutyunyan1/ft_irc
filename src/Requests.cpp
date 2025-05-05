@@ -21,8 +21,16 @@ Requests::Requests(const Requests &other)
 	}
 }
 
-Requests &Requests::operator=(const Requests&) {
-	return *this;
+Requests &Requests::operator=(const Requests &copy) {
+	if (this != &copy) {
+		this->_password = copy._password;
+		this->_username = copy._username;
+		this->_fd = copy._fd;
+		this->_fds = copy._fds;
+		this->_server = copy._server;
+		this->_client = copy._client;
+	}
+	return (*this);
 }
 
 Requests::~Requests() {
