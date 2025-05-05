@@ -4,12 +4,14 @@ void Requests::PRIVMSG(const std::string &receiver, const std::string &message) 
 {
 	if (receiver == "bot")
 	{
-		this->_server.sendRequestToBot(message, this->_fd);
+		std::string prefix = ":bot!bot";
+		sendSystemMessage(this->_fd, prefix + " PRIVMSG " + _client.getNick() + " :" + this->_server.getBotResponse(message));
+
 		return;
 	}
-
-	int user = _server.getUser(receiver);
+	
 	std::string prefix = ":" + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP();
+	int user = _server.getUser(receiver);
 
 	if (message.empty())
 	{

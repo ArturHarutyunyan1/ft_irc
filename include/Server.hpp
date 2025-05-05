@@ -4,7 +4,6 @@
 #include "Client.hpp"
 #include "Utils.hpp"
 #include "Channel.hpp"
-#include "Bot.hpp"
 #include "Requests.hpp"
 #include <vector>
 #include <iostream>
@@ -36,7 +35,6 @@ private:
 	std::string _host;
 	std::string _password;
 	struct pollfd *_client_fds;
-	std::map<int, Bot> _botRequests;
 	// Map of channels
 	std::map<std::string, Channel> _channels;
 	// Map of users and their fds
@@ -54,7 +52,6 @@ public:
 	void start();
 	void newClient(int fd);
 	void handleRequest(int i);
-	void handleRequestBot(Bot *bot, int i);
 	int getPort() const;
 	void addUser(const std::string &nickname, int fd);
 	int getUser(const std::string &nickname) const;
@@ -68,14 +65,7 @@ public:
 
 	int findFreeFdSlot();
 
-	Bot *findBotBySocket(int socketFd);
-	void sendRequestToBot(std::string msg, int clientFd);
-	void cleanupBot(Bot *bot, int pollfdIndex);
-
-	void botInit(Bot *bot, int idx);
-	void botHandshake(Bot *bot, int idx);
-	void botSending(Bot *bot, int idx);
-	void botReceiving(Bot *bot, int idx);
+	std::string getBotResponse(const std::string& msg);
 };
 
 #endif

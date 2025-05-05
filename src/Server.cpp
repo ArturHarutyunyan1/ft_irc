@@ -1,9 +1,7 @@
 #include "../include/Server.hpp"
 #include <cerrno>
 #include <sys/poll.h>
-#include "../include/Bot.hpp"
 #include <sys/socket.h>
-#include <algorithm>
 #include <map>
 
 Server::Server(int port, std::string password) : _port(port), _password(password)
@@ -139,183 +137,8 @@ int Server::findFreeFdSlot()
 	return -1;
 }
 
-Bot *Server::findBotBySocket(int socketFd)
-{
-	std::map<int, Bot>::iterator it = this->_botRequests.find(socketFd);
-
-	if (it != this->_botRequests.end())
-		return &(it->second);
-
-	return NULL;
-}
-
-void Server::cleanupBot(Bot *bot, int fdIndex)
-{
-	if (bot)
-		bot->cleanup();
-
-	if (fdIndex > 1 && fdIndex < MAX_CONNECTIONS)
-	{
-		close(this->_client_fds[fdIndex].fd);
-		this->_client_fds[fdIndex].fd = -1;
-		this->_client_fds[fdIndex].events = 0;
-	}
-}
-
-void Server::botInit(Bot *bot, int idx)
-{
-	int botSocket = this->_client_fds[idx].fd;
-
-	SSL_CTX *ctx = bot->getSslCtx();
-	SSL *ssl = SSL_new(ctx);
-
-	bot->setSsl(ssl);
-	if (!bot->getSsl())
-	{
-		std::string error = "bot: SSL initialization failed\n";
-		send(bot->getClientFd(), error.c_str(), error.size(), 0);
-		cleanupBot(bot, idx);
-		return;
-	}
-
-	SSL_set_tlsext_host_name(bot->getSsl(), "api.groq.com");
-	SSL_set_fd(bot->getSsl(), botSocket);
-	bot->setState(HANDSHAKE);
-
-	this->_client_fds[idx].events = POLLIN | POLLOUT;
-}
-
-void Server::botHandshake(Bot *bot, int idx)
-{
-	int err = SSL_connect(bot->getSsl());
-
-	if (err == 1)
-	{
-		bot->setState(SENDING);
-		this->_client_fds[idx].events = POLLOUT;
-	}
-	else
-	{
-		int ssl_err = SSL_get_error(bot->getSsl(), err);
-
-		if (ssl_err == SSL_ERROR_WANT_READ)
-			this->_client_fds[idx].events = POLLIN;
-		else if (ssl_err == SSL_ERROR_WANT_WRITE)
-			this->_client_fds[idx].events = POLLOUT;
-		else
-		{
-			ERR_print_errors_fp(stderr);
-			std::string error = "bot: SSL handshake failed\n";
-			send(bot->getClientFd(), error.c_str(), error.size(), 0);
-			cleanupBot(bot, idx);
-			return;
-		}
-	}
-}
-
-void Server::botSending(Bot *bot, int idx)
-{
-	int bytes = SSL_write(bot->getSsl(), bot->getRequest().c_str(), bot->getRequest().length());
-
-	if (bytes > 0)
-	{
-		bot->setState(RECEIVING);
-		this->_client_fds[idx].events = POLLIN;
-	}
-	else
-	{
-		int ssl_err = SSL_get_error(bot->getSsl(), bytes);
-
-		if (ssl_err == SSL_ERROR_WANT_WRITE)
-			this->_client_fds[idx].events = POLLOUT;
-		else if (ssl_err == SSL_ERROR_WANT_READ)
-			this->_client_fds[idx].events = POLLIN;
-		else
-		{
-			ERR_print_errors_fp(stderr);
-			std::string error = "bot: Failed to send request\n";
-			send(bot->getClientFd(), error.c_str(), error.size(), 0);
-			cleanupBot(bot, idx);
-			return;
-		}
-	}
-}
-
-void Server::botReceiving(Bot *bot, int idx)
-{
-	char buffer[15192];
-
-	int bytes = SSL_read(bot->getSsl(), buffer, sizeof(buffer) - 1);
-
-	if (bytes > 0)
-	{
-		buffer[bytes] = '\0';
-		bot->getResponse() += std::string(buffer);
-		;
-		size_t posContent = bot->getResponse().find("\"content\"");
-		size_t posLogprobs = bot->getResponse().find("\"logprobs\"");
-
-		if (!(posContent == std::string::npos || posLogprobs == std::string::npos))
-		{
-			std::string extracted = bot->getResponse().substr(posContent + 11, posLogprobs - posContent - 15);
-			std::string response = "bot: " + extracted + ".\n";
-
-			std::cout << "Bot response for a client with socket #" << bot->getClientFd() << " is ready\n";
-
-			send(bot->getClientFd(), response.c_str(), response.size(), 0);
-			bot->setState(COMPLETE);
-			cleanupBot(bot, idx);
-		}
-	}
-	else if (bytes == 0 || SSL_get_error(bot->getSsl(), bytes) == SSL_ERROR_ZERO_RETURN)
-	{
-		bot->setState(COMPLETE);
-		cleanupBot(bot, idx);
-	}
-	else
-	{
-		int ssl_err = SSL_get_error(bot->getSsl(), bytes);
-
-		if (ssl_err == SSL_ERROR_WANT_READ)
-			_client_fds[idx].events = POLLIN;
-		else if (ssl_err == SSL_ERROR_WANT_WRITE)
-			_client_fds[idx].events = POLLOUT;
-		else
-		{
-			perror("SSL_read");
-			cleanupBot(bot, idx);
-		}
-	}
-}
-
-void Server::handleRequestBot(Bot *bot, int i)
-{
-	if (bot->getState() == INIT && this->_client_fds[i].revents & POLLOUT)
-		this->botInit(bot, i);
-	else if (bot->getState() == HANDSHAKE && _client_fds[i].revents & (POLLIN | POLLOUT))
-		this->botHandshake(bot, i);
-	else if (bot->getState() == SENDING && _client_fds[i].revents & POLLOUT)
-		this->botSending(bot, i);
-	else if (bot->getState() == RECEIVING && _client_fds[i].revents & POLLIN)
-		this->botReceiving(bot, i);
-	// else if (_client_fds[i].revents & (POLLERR | POLLHUP))
-	// {
-	//     std::cerr << "Bot socket error, FD: " << botSocket << ", revents: " << _client_fds[i].revents << std::endl;
-	//     std::string error = "bot: Socket error\n";
-	//     send(bot->getClientFd(), error.c_str(), error.size(), 0);
-	// }
-}
-
 void Server::handleRequest(int i)
 {
-	Bot *bot = findBotBySocket(this->_client_fds[i].fd);
-
-	if (bot != NULL)
-	{
-		handleRequestBot(bot, i);
-		return;
-	}
-
 	char buffer[1024] = {0};
 	int client_fd = this->_client_fds[i].fd;
 	ssize_t bytes = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -468,70 +291,18 @@ void Server::start()
 	}
 }
 
-void Server::sendRequestToBot(std::string msg, int clientFd)
+std::string Server::getBotResponse(const std::string& msg)
 {
-	Bot bot = Bot();
+	std::string response;
 
-	int socketFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	if (msg == "Hello")
+		response = "Hello, how can I help you?";
+	else if (msg == "Tell me about you")
+		response = "I'm a simple irc bot that can answer some of your questions.";
+	else
+		response = "Sorry, I don't understand your question. Try again.";
 
-	this->_botRequests[socketFd] = bot;
+	response += "\n";
 
-	if (socketFd < 0)
-	{
-		perror("socket");
-		// throw
-		return;
-	}
-
-	int fdIndex = findFreeFdSlot();
-	if (fdIndex == -1)
-	{
-		std::string error = "bot: Server busy, try again later\n";
-		send(clientFd, error.c_str(), error.size(), 0);
-		bot.cleanup();
-		return;
-	}
-
-	this->_client_fds[fdIndex].fd = socketFd;
-
-	Bot &botRef = this->_botRequests[socketFd];
-
-	int port = 443;
-	std::pair<std::string, std::string> bodyHost = getRequestBody(msg);
-
-	botRef.setRequest(bodyHost.first);
-
-	SSL_load_error_strings();
-	SSL_library_init();
-	botRef.setSslCtx(SSL_CTX_new(SSLv23_client_method()));
-
-	if (!botRef.getSslCtx())
-	{
-		perror("SSL_CTX_new");
-		return;
-	}
-	struct hostent *server = gethostbyname(bodyHost.second.c_str());
-	if (server == NULL)
-		perror("gethostbyname");
-
-	struct sockaddr_in addr;
-	memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	memcpy(&addr.sin_addr.s_addr, server->h_addr, server->h_length);
-
-	int ret = connect(socketFd, (struct sockaddr *)&addr, sizeof(addr));
-	if (ret == -1 && errno != EINPROGRESS)
-	{
-		perror("connect");
-		std::string error = "bot: Connection failed\n";
-		send(clientFd, error.c_str(), error.size(), 0);
-		botRef.cleanup();
-		return;
-	}
-
-	botRef.setClientFd(clientFd);
-	botRef.setState(INIT);
-
-	this->_client_fds[fdIndex].events = POLLOUT;
+	return response;
 }
