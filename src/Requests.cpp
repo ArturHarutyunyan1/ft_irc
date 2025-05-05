@@ -277,7 +277,7 @@ void Requests::sendToEveryone(Channel const &channel, const std::string &message
 	}
 }
 
-void Requests::sendSystemMessage(int fd, const std::string &message) const
+void Requests::sendSystemMessage(int fd, const std::string &message)
 {
 	send(fd, message.c_str(), message.size(), 0);
 }

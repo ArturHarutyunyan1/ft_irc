@@ -62,6 +62,16 @@ void Bot::cleanup()
     }
 }
 
+std::string const& Bot::getPrefix() const
+{
+    return this->_prefix;
+}
+
+void Bot::setPrefix(std::string pref)
+{
+    this->_prefix = pref;
+}
+
 State Bot::getState()
 {
     return this->_state;
@@ -92,7 +102,7 @@ void Bot::setSsl(SSL* ssl)
     this->_ssl = ssl;
 }
 
-std::string& Bot::getRequest()
+std::string const& Bot::getRequest()
 {
     return this->_request;
 }

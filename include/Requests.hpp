@@ -36,7 +36,7 @@ public:
 	void INVITE(const std::string &nickname, const std::string &channel);
 	void MODE(Channel &channel, const std::string &channelname, const std::string &flag, const std::string &extra);
 	void sendToEveryone(Channel const &channel, const std::string &message) const;
-	void sendSystemMessage(int fd, const std::string &message) const;
+	static void sendSystemMessage(int fd, const std::string &message);
 
 private:
 	std::string _password;

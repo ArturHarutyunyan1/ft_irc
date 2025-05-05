@@ -58,7 +58,8 @@ public:
 	int getPort() const;
 	void addUser(const std::string &nickname, int fd);
 	int getUser(const std::string &nickname) const;
-	std::string const &getPassword() const;
+	std::string const getNick(int fd) const;
+	std::string const& getPassword() const;
 
 	void removeUser(const std::string &nickname);
 	Channel *getChannel(const std::string &channelName);

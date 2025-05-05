@@ -22,6 +22,7 @@ class Bot
         State _state;
         SSL_CTX* _sslCtx;
         SSL* _ssl;
+        std::string _prefix;
         std::string _request;
         std::string _response;
         int _clientFd;
@@ -46,7 +47,7 @@ class Bot
         SSL* getSsl();
         void setSsl(SSL* ssl);
         
-        std::string& getRequest();
+        std::string const& getRequest();
         void setRequest(std::string& req);
 
         std::string& getResponse();
@@ -54,6 +55,9 @@ class Bot
 
         void setClientFd(int fd);
         int getClientFd();
+
+        void setPrefix(std::string pref);
+        std::string const& getPrefix() const;
 };
 
 #endif

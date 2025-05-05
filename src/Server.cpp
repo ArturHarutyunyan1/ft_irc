@@ -1,5 +1,6 @@
 #include "../include/Server.hpp"
 #include <cerrno>
+#include <string>
 #include <sys/poll.h>
 #include "../include/Bot.hpp"
 #include <sys/socket.h>
@@ -251,18 +252,18 @@ void Server::botReceiving(Bot *bot, int idx)
 	{
 		buffer[bytes] = '\0';
 		bot->getResponse() += std::string(buffer);
-		;
+
 		size_t posContent = bot->getResponse().find("\"content\"");
 		size_t posLogprobs = bot->getResponse().find("\"logprobs\"");
 
 		if (!(posContent == std::string::npos || posLogprobs == std::string::npos))
 		{
-			std::string extracted = bot->getResponse().substr(posContent + 11, posLogprobs - posContent - 15);
-			std::string response = "bot: " + extracted + ".\n";
+			std::string extracted = bot->getResponse().substr(posContent + 11, posLogprobs - posContent - 15) + ".\n";
 
 			std::cout << "Bot response for a client with socket #" << bot->getClientFd() << " is ready\n";
 
-			send(bot->getClientFd(), response.c_str(), response.size(), 0);
+			Requests::sendSystemMessage(bot->getClientFd(), bot->getPrefix() + " PRIVMSG " + this->getNick(bot->getClientFd()) + " :" + extracted);
+			// send(bot->getClientFd(), response.c_str(), response.size(), 0);
 			bot->setState(COMPLETE);
 			cleanupBot(bot, idx);
 		}
@@ -298,12 +299,6 @@ void Server::handleRequestBot(Bot *bot, int i)
 		this->botSending(bot, i);
 	else if (bot->getState() == RECEIVING && _client_fds[i].revents & POLLIN)
 		this->botReceiving(bot, i);
-	// else if (_client_fds[i].revents & (POLLERR | POLLHUP))
-	// {
-	//     std::cerr << "Bot socket error, FD: " << botSocket << ", revents: " << _client_fds[i].revents << std::endl;
-	//     std::string error = "bot: Socket error\n";
-	//     send(bot->getClientFd(), error.c_str(), error.size(), 0);
-	// }
 }
 
 void Server::handleRequest(int i)
@@ -378,6 +373,19 @@ int Server::getUser(const std::string &nickname) const
 	if (it != _usernameToFd.end())
 		return (it->second);
 	return (-1);
+}
+
+std::string const Server::getNick(int fd) const
+{
+	std::map<int, Client>::const_iterator it = _clients.find(fd);
+
+	if (it != _clients.end())
+	{
+		Client client = it->second;
+		return client.getNick();
+	}
+
+	return NULL;
 }
 
 void Server::removeChannel(const std::string &channelName)
@@ -479,7 +487,6 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
 	if (socketFd < 0)
 	{
 		perror("socket");
-		// throw
 		return;
 	}
 
@@ -500,6 +507,7 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
 	std::pair<std::string, std::string> bodyHost = getRequestBody(msg);
 
 	botRef.setRequest(bodyHost.first);
+	botRef.setPrefix(":bot!bot");
 
 	SSL_load_error_strings();
 	SSL_library_init();
