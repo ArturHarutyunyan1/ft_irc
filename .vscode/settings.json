@@ -1,5 +1,7 @@
 {
+    "C_Cpp.intelliSenseEngine": "default",
     "files.associations": {
+        "*.sql": "sql",
         "algorithm": "cpp",
         "__bit_reference": "cpp",
         "__hash_table": "cpp",
@@ -77,6 +79,7 @@
         "numbers": "cpp",
         "span": "cpp",
         "text_encoding": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "cinttypes": "cpp"
     }
 }

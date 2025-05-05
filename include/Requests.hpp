@@ -20,21 +20,22 @@ extern std::string serverName;
 class Client;
 class Server;
 
-class Requests {
+class Requests
+{
 public:
-	Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server& _server, Client& _client);
+	Requests(char *msg, struct pollfd *fds, int fd, std::string _password, Server &_server, Client &_client);
 	~Requests();
-	
+
 	void handleRequest();
-	std::string PASS(std::string const& msg);
+	std::string PASS(std::string const &msg);
 	std::string NICK(const std::string &nickname);
 	void JOIN(const std::string &channelName, const std::string &key);
 	void PRIVMSG(const std::string &receiver, const std::string &message) const;
 	void KICK(const std::string &channel, const std::string &nickname, const std::string &reason);
 	void TOPIC(const std::string &channel, const std::string &topic);
 	void INVITE(const std::string &nickname, const std::string &channel);
-	void MODE(Channel& channel, const std::string &channelname, const std::string &flag, const std::string &extra);
-	void sendToEveryone(Channel const& channel, const std::string &message) const;
+	void MODE(Channel &channel, const std::string &channelname, const std::string &flag, const std::string &extra);
+	void sendToEveryone(Channel const &channel, const std::string &message) const;
 	void sendSystemMessage(int fd, const std::string &message) const;
 
 private:
@@ -43,8 +44,8 @@ private:
 	char *_message;
 	int _fd;
 	struct pollfd *_fds;
-	Server& _server;
-	Client& _client;
+	Server &_server;
+	Client &_client;
 
 	static std::string const green;
 	static std::string const red;
@@ -53,8 +54,8 @@ private:
 	static std::string const reset;
 	static std::string const serverName;
 
-	Requests(Requests const&);
-	Requests &operator=(Requests const&);
+	Requests(Requests const &);
+	Requests &operator=(Requests const &);
 };
 
 #endif
