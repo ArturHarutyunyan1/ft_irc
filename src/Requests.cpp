@@ -55,10 +55,9 @@ void Requests::handleRequest()
 		command = message;
 		args = "";
 	}
-	if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER")
-		response = ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" + "\n";
-	else
-	{
+	if (!_client.isAuthenticated() && command != "HELP" && command != "PASS" && command != "NICK" && command != "USER" && command != "CAP")
+		response =  ":" + serverName + " 451 " + " :You must authenticate first. Use HELP for more info" +  "\n";
+	else {
 		if (command == "HELP" && args.empty())
 			response = helpMessage();
 		else if (command == "PASS")
@@ -83,10 +82,9 @@ void Requests::handleRequest()
 				{
 					realname = realname.substr(1);
 					_client.setUsername(username, realname);
-					response = serverName + " 001 " + _client.getNick() + " :Welcome to Welcome to the Internet Relay Network " + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() + "\n";
-				}
-				else
-					response = serverName + " 462 :You must enter password and crate nick before creating USER" + "\n";
+						response = serverName + " 001 " + _client.getNick() + " :Welcome to the Internet Relay Network " + _client.getNick() + "!" + _client.getUsername() + "@" + _client.getIP() +  "\n";
+				} else
+					response =  serverName + " 462 :You must enter password and crate nick before creating USER" +  "\n";
 			}
 		}
 		else if (command == "KICK")
@@ -98,10 +96,9 @@ void Requests::handleRequest()
 			std::string reason;
 			std::getline(iss, reason);
 			if (!reason.empty() && reason[0] == ' ')
-				reason.erase(0, 1); // Remove leading space
-
-			if (!channel.empty() && !user.empty())
-			{
+				reason.erase(0, 1);
+			
+			if (!channel.empty() && !user.empty()) {
 				KICK(channel, user, reason);
 			}
 			else
@@ -234,7 +231,33 @@ void Requests::handleRequest()
 						_server.removeChannel(channelName);
 				}
 			}
-		}
+			else if (command == "PING")
+			{
+				std::istringstream iss(args);
+
+				std::string msg;
+				std::getline(iss >> std::ws, msg);
+				response = "PONG :" + msg + "\r\n";
+			}
+			else if (command == "CAP") {
+				std::istringstream iss(args);
+				std::string subcmd;
+				iss >> subcmd;
+			
+				if (subcmd == "LS") {
+					response = "CAP * LS :multi-prefix sasl\r\n";
+				} else if (subcmd == "REQ") {
+					std::string capList;
+					std::getline(iss >> std::ws, capList);
+					if (!capList.empty() && capList[0] == ':')
+						capList = capList.substr(1);
+					response = "CAP * ACK :" + capList + "\r\n";
+				} else if (subcmd == "END") {
+					response = "";
+				} else {
+					response = "CAP * NAK :" + subcmd + "\r\n";
+				}
+			}
 		else
 			response = serverName + " :No such command" + "\n";
 	}

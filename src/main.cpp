@@ -15,16 +15,23 @@ void handleSignal(int s) {
 
 int main(int argc, char **argv)
 {
-	if (argc < 3) {
-		std::cerr << "Invalid arguments\nUsage - ./ircserv <port> <password>" << std::endl;
-		return (1);
-	} else if (stringToInt(argv[1]) < 1024 || stringToInt(argv[1]) > 65535) {
-		std::cerr << "Invalid port range\nUse values in range of 1024 to 65535" << std::endl;
+	try {
+		if (argc < 3) {
+			throw std::runtime_error("Invalid arguments\nUsage - ./ircserv <port> <password>");
+		} else if (stringToInt(argv[1]) < 1024 || stringToInt(argv[1]) > 65535) {
+			throw std::runtime_error("Invalid port range\nUse values in range of 1024 to 65535");
+		}
+		signal(SIGINT, handleSignal);
+		globalServer = new Server(stringToInt(argv[1]), argv[2]);
+		if (!globalServer)
+			throw std::runtime_error("Memory allocation failure");
+		globalServer->start();
+		delete globalServer;
+		return (0);
+	} catch (std::exception &e) {
+		if (globalServer)
+			delete globalServer;
+		std::cerr << e.what() << std::endl;
 		return (1);
 	}
-	signal(SIGINT, handleSignal);
-	globalServer = new Server(stringToInt(argv[1]), argv[2]);
-	globalServer->start();
-	delete globalServer;
-	return (0);
 }
