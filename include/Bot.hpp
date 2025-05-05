@@ -28,6 +28,10 @@ class Bot
 
     public:
         Bot();
+        Bot(const Bot& bot);
+
+        Bot&    operator=(const Bot& bot);
+
         ~Bot();
 
         void initSocket();
@@ -35,18 +39,18 @@ class Bot
 
         State getState();
         void setState(State state);
-        
+
         SSL_CTX* getSslCtx();
         void setSslCtx(SSL_CTX* ctx);
-        
+
         SSL* getSsl();
         void setSsl(SSL* ssl);
         
         std::string& getRequest();
-        void setRequest(std::string req);
+        void setRequest(std::string& req);
 
         std::string& getResponse();
-        void setResponse(std::string resp);
+        void setResponse(std::string& resp);
 
         void setClientFd(int fd);
         int getClientFd();

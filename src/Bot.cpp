@@ -3,12 +3,35 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <openssl/err.h>
-#include <iostream>
 
 Bot::Bot()
 {
     initSocket();
+}
+
+Bot::Bot(const Bot& bot)
+{
+    this->setClientFd(bot._clientFd);
+    this->_state = bot._state;
+    this->_request = bot._request;
+    this->_response = bot._response;
+    this->_ssl = bot._ssl;
+    this->_sslCtx = bot._sslCtx;
+}
+
+Bot&    Bot::operator=(const Bot& bot)
+{
+    if (this != &bot)
+    {
+        this->setClientFd(bot._clientFd);
+        this->_state = bot._state;
+        this->_request = bot._request;
+        this->_response = bot._response;
+        this->_ssl = bot._ssl;
+        this->_sslCtx = bot._sslCtx;
+    }
+
+    return *this;
 }
 
 Bot::~Bot()
@@ -74,7 +97,7 @@ std::string& Bot::getRequest()
     return this->_request;
 }
 
-void Bot::setRequest(std::string req)
+void Bot::setRequest(std::string& req)
 {
     this->_request = req;
 }
@@ -84,7 +107,7 @@ std::string& Bot::getResponse()
     return this->_response;
 }
 
-void Bot::setResponse(std::string resp)
+void Bot::setResponse(std::string& resp)
 {
     this->_response = resp;
 }
