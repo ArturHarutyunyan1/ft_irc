@@ -73,6 +73,8 @@ void Server::cleanup()
 		close(serverSocket);
 		_client_fds[0].fd = -1;
 	}
+	for (std::map<int, Bot>::iterator it = _botRequests.begin(); it != _botRequests.end(); it++)
+		close(it->first);
 	std::cout << "All resources have been cleaned up." << std::endl;
 }
 
@@ -328,8 +330,10 @@ void Server::handleRequest(int i)
 		close(client_fd);
 		this->_client_fds[i].fd = -1;
 		this->_client_fds[i].events = 0;
+		this->_usernameToFd.erase((_clients[client_fd].getNick()));
 		this->_clients.erase(client_fd);
 		_clientBuffers.erase(client_fd);
+
 		return;
 	}
 
@@ -481,7 +485,6 @@ void Server::sendRequestToBot(std::string msg, int clientFd)
 	Bot bot = Bot();
 
 	int socketFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-
 	this->_botRequests[socketFd] = bot;
 
 	if (socketFd < 0)

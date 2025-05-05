@@ -78,7 +78,7 @@ int stringToInt(const std::string &string)
 std::pair<std::string, std::string> getRequestBody(const std::string &msg)
 {
     std::string host = "api.groq.com";
-    std::string apiKey = "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";
+    std::string apiKey = "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";
     std::string endpoint = "/openai/v1/chat/completions";
     std::string contentType = "Content-Type: application/json";
     std::string bearer = "Authorization: Bearer " + apiKey;
